@@ -13,12 +13,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { postsApi, type Post } from '../api/posts'
+import type { Post } from '../api/posts'
 
-const posts = ref<Post[]>([])
-
-onMounted(async () => {
-  posts.value = await postsApi.getAll()
-})
+// 親コンポーネントから受け取るprops
+defineProps<{
+  posts: Post[]
+}>()
 </script>
+
+<style scoped>
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+}
+
+h3 {
+  margin-top: 0;
+}
+
+small {
+  color: #666;
+}
+</style>
