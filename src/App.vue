@@ -1,11 +1,19 @@
-<script setup></script>
-
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div id="app">
+    <h1>Laravel API + Vue 3</h1>
+    <PostList />
+  </div>
 </template>
 
-<style scoped></style>
+<script setup lang="ts">
+import PostList from './components/PostList.vue'
+</script>
+
+<style>
+#app {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+}
+</style>
