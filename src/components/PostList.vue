@@ -1,6 +1,10 @@
 <template>
   <div>
-    <h2>投稿一覧</h2>
+    <div class="header">
+      <h2>投稿一覧</h2>
+      <button @click="goToCreate" class="create-btn">新規作成</button>
+    </div>
+
     <ul v-if="posts.length">
       <li v-for="post in posts" :key="post.id">
         <h3>{{ post.title }}</h3>
@@ -10,7 +14,7 @@
           <span class="status-label">{{ post.status }}</span>
         </div>
         <div class="button-group">
-          <button @click="handleEdit(post)" class="edit-btn">
+          <button @click="goToEdit(post.id!)" class="edit-btn">
             編集
           </button>
           <button @click="handleDelete(post.id!)" class="delete-btn">
@@ -24,33 +28,58 @@
 </template>
 
 <script setup lang="ts">
-import type { Post } from "../api/posts";
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { postsApi, type Post } from '../api/posts'
 
-// 親コンポーネントから受け取るprops
-defineProps<{
-  posts: Post[];
-}>();
+const router = useRouter()
+const posts = ref<Post[]>([])
 
-// 親コンポーネントにイベントを送信するための関数を定義
-const emit = defineEmits<{
-  deleted: [id: number];
-  edit: [post: Post];
-}>();
+// 初期データ取得
+onMounted(async () => {
+  posts.value = await postsApi.getAll()
+})
 
-// 編集処理
-const handleEdit = async (post: Post) => {
-  emit("edit", post);
-};
+// 新規作成ページへ
+const goToCreate = () => {
+  router.push('/posts/create')
+}
+
+// 編集ページへ
+const goToEdit = (id: number) => {
+  router.push(`/posts/${id}/edit`)
+}
 
 // 削除処理
 const handleDelete = async (id: number) => {
-  if (confirm("本当に削除しますか？")) {
-    emit("deleted", id);
+  if (confirm('本当に削除しますか？')) {
+    await postsApi.delete(id)
+    posts.value = posts.value.filter(post => post.id !== id)
   }
-};
+}
 </script>
 
 <style scoped>
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.create-btn {
+  background-color: #41B883;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.create-btn:hover {
+  opacity: 0.8;
+}
+
 ul {
   list-style: none;
   padding: 0;
@@ -69,9 +98,10 @@ li {
 
 h2 {
   font-size: 1rem;
+  margin: 0;
 }
 
-h3,p {
+h3, p {
   margin: 0;
 }
 
