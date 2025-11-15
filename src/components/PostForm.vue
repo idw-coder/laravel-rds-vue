@@ -1,6 +1,6 @@
 <template>
     <div class="post-form">
-      <h2>新しい投稿</h2>
+      <h2>投稿フォーム</h2>
       <!-- @submit.prevent: フォーム送信時のデフォルト動作を防止 -->
       <form @submit.prevent="handleSubmit">
         <div>
@@ -14,7 +14,7 @@
         </div>
         <div>
           <label>ステータス</label>
-          <select v-model="form.status">
+          <select v-model="form.status" class="status-select">
             <option value="draft">下書き</option>
             <option value="published">公開</option>
           </select>
@@ -59,44 +59,56 @@
   </script>
   
   <style scoped>
+  h2 {
+    font-size: 1rem;
+    margin-top: 0;
+  }
+
   .post-form {
     border: 1px solid #ddd;
-    padding: 20px;
-    margin-bottom: 30px;
-    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
   }
   
-  div {
-    margin-bottom: 15px;
+  .post-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
   
   label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
     font-weight: bold;
   }
   
   input, textarea, select {
     width: 100%;
-    padding: 8px;
+    padding: 0.5rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 0.5rem;
+    box-sizing: border-box;
   }
   
   textarea {
     min-height: 100px;
+    box-sizing: border-box;
+  }
+
+  .status-select {
+    width: auto;
   }
   
   button {
-    background-color: #42b983;
+    background-color: #41B883;
     color: white;
-    padding: 10px 20px;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 0.5rem;
     cursor: pointer;
   }
   
   button:hover {
-    background-color: #35a372;
+    opacity: 0.8;
   }
   </style>
