@@ -46,6 +46,11 @@ Lightsail のブラウザターミナルで以下を実行、確認
 ubuntu@ip-172-26-6-105:~$ ssh-keygen -t rsa -b 4096 -C "github-actions" -f ~/.ssh/github_actions_key -N ""
 ubuntu@ip-172-26-6-105:~$ cat ~/.ssh/github_actions_key
 ```
+信頼する公開鍵のリストに追加
+
+```bash
+cat ~/.ssh/github_actions_key.pub >> ~/.ssh/authorized_keys
+```
 
 GitHub で Vue リポジトリを開く
 Settings → Secrets and variables → Actions
