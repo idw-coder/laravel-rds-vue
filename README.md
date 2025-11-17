@@ -70,6 +70,53 @@ Secret: コピーした秘密鍵を貼り付け
 
 .github\workflows\deploy.ymlを作成
 
+mainでpush
+
+#### Nginx の設定
+Lightsail で Vue アプリ用の Nginx 設定を作成します。
+
+Lightsailのターミナルで下記
+```bash
+sudo nano /etc/nginx/sites-available/vue
+```
+下記を張り付け
+```
+server {
+    listen 8080;
+    server_name 54.178.81.51;
+    
+    root /var/www/vue;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+##### 設定を有効化して Nginx を再起動
+
+```bash
+# シンボリックリンクを作成
+sudo ln -s /etc/nginx/sites-available/vue /etc/nginx/sites-enabled/
+
+# 設定をテスト
+sudo nginx -t
+
+# Nginx を再起動
+sudo systemctl reload nginx
+```
+
+##### ファイアウォールでポート 8080 を開放
+
+AWS Lightsail のコンソールで:
+
+インスタンスの「ネットワーキング」タブ
+「ルールを追加」
+アプリケーション: カスタム
+プロトコル: TCP
+ポート: 8080
+保存
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
