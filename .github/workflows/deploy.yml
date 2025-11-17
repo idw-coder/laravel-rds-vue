@@ -1,0 +1,48 @@
+name: Deploy Vue to Lightsail
+
+on:
+  push:
+    branches:
+      - main  # main ブランチに push されたら実行
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # リポジトリをチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Node.js のセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: npm ci
+
+      # Vue のビルド
+      - name: Build Vue app
+        run: npm run build
+
+      # SSH 接続して dist をデプロイ
+      - name: Deploy to Lightsail
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          # SSH キーの設定
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+          # dist フォルダをアップロード
+          scp -r dist $SSH_USER@$SSH_HOST:/home/ubuntu/vue-app
+
+          # Nginx の配置場所に移動（後で設定）
+          ssh $SSH_USER@$SSH_HOST "sudo rm -rf /var/www/vue && sudo mv /home/ubuntu/vue-app /var/www/vue"
