@@ -78,4 +78,26 @@ export const authApi = {
       throw new Error("ログアウトに失敗しました");
     }
   },
+  // Google 認証 URL を取得
+  async getGoogleAuthUrl(): Promise<string> {
+    try {
+      const res = await fetch(`${API_BASE}/auth/google`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        throw new Error("Google 認証 URL の取得に失敗しました");
+      }
+
+      const data = await res.json();
+      return data.url;
+    } catch (error) {
+      console.error("Google auth URL error:", error);
+      if (error instanceof TypeError) {
+        throw new Error("サーバーに接続できません");
+      }
+      throw error;
+    }
+  },
 };

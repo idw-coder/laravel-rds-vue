@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "@/views/Login.vue";
+import GoogleCallback from "@/views/GoogleCallback.vue";
 import PostList from "@/components/PostList.vue"; // ← 後で views に移動予定
 import PostForm from "@/components/PostForm.vue";
 import PostEdit from "@/components/PostEdit.vue";
@@ -18,6 +19,11 @@ const router = createRouter({
       },
     },
     { path: "/login", name: "login", component: Login },
+    { 
+      path: "/auth/google/callback", 
+      name: "google-callback", 
+      component: GoogleCallback 
+    },
 
     {
       path: "/posts",

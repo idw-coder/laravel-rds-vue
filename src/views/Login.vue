@@ -20,6 +20,15 @@
 
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       </form>
+
+      <!-- 区切り線 -->
+      <div class="divider">または</div>
+
+      <!-- Google ログインボタン -->
+      <button @click="handleGoogleLogin" class="google-btn" :disabled="isLoading">
+        <img src="https://www.google.com/favicon.ico" alt="Google" />
+        Google でログイン
+      </button>
     </div>
   </div>
 </template>
@@ -32,14 +41,15 @@ import { useRouter } from "vue-router";
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
-const isLoading = ref(false); // ローディング状態
+const isLoading = ref(false);
 
 const router = useRouter();
 
+// 既存のメール・パスワードログイン
 const handleLogin = async () => {
   try {
     errorMessage.value = "";
-    isLoading.value = true; // ローディング開始
+    isLoading.value = true;
 
     const res = await authApi.login({
       email: email.value,
@@ -50,31 +60,75 @@ const handleLogin = async () => {
 
     router.push("/posts");
   } catch (e) {
-    // エラーの詳細をそのまま表示
     if (e instanceof Error) {
       errorMessage.value = e.message;
     } else {
       errorMessage.value = "ログインに失敗しました";
     }
   } finally {
-    isLoading.value = false; // ローディング終了
+    isLoading.value = false;
+  }
+};
+
+// Google ログイン
+const handleGoogleLogin = async () => {
+  try {
+    errorMessage.value = "";
+    isLoading.value = true;
+
+    // Google 認証 URL を取得
+    const googleAuthUrl = await authApi.getGoogleAuthUrl();
+
+    // ポップアップで Google 認証画面を開く
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    window.open(
+      googleAuthUrl,
+      "Google Login",
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    // ポップアップからのメッセージを待つ
+    window.addEventListener("message", handleGoogleCallback);
+  } catch (err: any) {
+    errorMessage.value = "Google ログインの開始に失敗しました";
+    isLoading.value = false;
+  }
+};
+
+// Google 認証完了後の処理
+const handleGoogleCallback = (event: MessageEvent) => {
+  if (event.origin !== window.location.origin) return;
+
+  if (event.data.token) {
+    localStorage.setItem("token", event.data.token);
+    localStorage.setItem("user", JSON.stringify(event.data.user));
+    window.removeEventListener("message", handleGoogleCallback);
+    isLoading.value = false;
+    router.push("/posts");
+  } else if (event.data.error) {
+    errorMessage.value = event.data.error;
+    isLoading.value = false;
   }
 };
 </script>
 
 <style scoped>
 #login {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .login-container {
-    max-width: 400px;
-    width: 100%;
-    padding: 1rem;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
+  max-width: 25rem;
+  width: 100%;
+  padding: 1rem;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
 }
 h2 {
   font-size: 1rem;
@@ -107,7 +161,8 @@ button.loading {
   animation: pulse 1.5s ease-in-out infinite;
 }
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     background-color: #41b883;
   }
   50% {
@@ -117,5 +172,33 @@ button.loading {
 .error {
   color: #e74c3c;
   margin-top: 0.5rem;
+}
+
+/* 区切り線 */
+.divider {
+  margin: 1rem 0;
+  text-align: center;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+/* Google ログインボタン */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: white;
+  color: #444;
+  border: 1px solid #ddd;
+  margin-top: 0;
+  font-size: 0.9rem;
+}
+.google-btn img {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.google-btn:hover:not(:disabled) {
+  background: #f5f5f5;
 }
 </style>
