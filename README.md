@@ -2,6 +2,23 @@
 
 ## personal_memo
 
+### fetch → fetchWithAuth
+
+- API
+src\lib\fetchWithAuth.ts
+src\api\auth.ts
+
+- VIEW
+
+vue-routerをインストール
+tsconfig.jsonに追記
+```json
+    "moduleResolution": "node",
+```
+編集したらTS サーバーを再起動
+src\views\Login.vue
+router/index.ts
+
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
