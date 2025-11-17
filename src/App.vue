@@ -50,6 +50,7 @@ const handleLogout = async () => {
 body {
   margin: 0;
   padding: 0;
+  font-size: 0.8rem;
 }
 #app {
   font-family: Arial, sans-serif;
@@ -77,7 +78,6 @@ header {
   display: flex;
   gap: 1rem;
   align-items: center;
-  font-size: 0.8rem;
 }
 
 .nav-link {

@@ -14,7 +14,9 @@
           <input v-model="password" type="password" placeholder="password123" />
         </div>
 
-        <button type="submit">ログイン</button>
+        <button type="submit" :disabled="isLoading" :class="{ 'loading': isLoading }">
+          {{ isLoading ? "ログイン中..." : "ログイン" }}
+        </button>
 
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       </form>
@@ -30,12 +32,14 @@ import { useRouter } from "vue-router";
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
+const isLoading = ref(false); // ローディング状態
 
 const router = useRouter();
 
 const handleLogin = async () => {
   try {
     errorMessage.value = "";
+    isLoading.value = true; // ローディング開始
 
     const res = await authApi.login({
       email: email.value,
@@ -46,7 +50,14 @@ const handleLogin = async () => {
 
     router.push("/posts");
   } catch (e) {
-    errorMessage.value = "メールアドレスまたはパスワードが違います。";
+    // エラーの詳細をそのまま表示
+    if (e instanceof Error) {
+      errorMessage.value = e.message;
+    } else {
+      errorMessage.value = "ログインに失敗しました";
+    }
+  } finally {
+    isLoading.value = false; // ローディング終了
   }
 };
 </script>
@@ -87,6 +98,21 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+}
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+button.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% {
+    background-color: #41b883;
+  }
+  50% {
+    background-color: #35a372;
+  }
 }
 .error {
   color: #e74c3c;

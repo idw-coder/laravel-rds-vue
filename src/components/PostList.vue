@@ -2,7 +2,7 @@
   <div>
     <div class="header">
       <h2>投稿一覧</h2>
-      <button @click="goToCreate" class="create-btn">新規作成</button>
+      <!-- <button @click="goToCreate" class="create-btn">新規作成</button> -->
     </div>
 
     <ul v-if="posts.length">
