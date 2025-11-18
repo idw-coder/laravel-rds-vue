@@ -6,20 +6,12 @@
     </div>
 
     <ul v-if="posts.length">
-      <li v-for="post in posts" :key="post.id">
+      <li v-for="post in posts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
 
         <div class="status-box">
           <span class="status-label">{{ post.status }}</span>
-        </div>
-        <div class="button-group">
-          <button @click="goToEdit(post.id!)" class="edit-btn">
-            編集
-          </button>
-          <button @click="handleDelete(post.id!)" class="delete-btn">
-            削除
-          </button>
         </div>
       </li>
     </ul>
@@ -40,22 +32,9 @@ onMounted(async () => {
   posts.value = await postsApi.getAll()
 })
 
-// 新規作成ページへ
-const goToCreate = () => {
-  router.push('/posts/create')
-}
-
-// 編集ページへ
-const goToEdit = (id: number) => {
-  router.push(`/posts/${id}/edit`)
-}
-
-// 削除処理
-const handleDelete = async (id: number) => {
-  if (confirm('本当に削除しますか？')) {
-    await postsApi.delete(id)
-    posts.value = posts.value.filter(post => post.id !== id)
-  }
+// 詳細ページへ（追加）
+const goToDetail = (id: number) => {
+  router.push(`/posts/${id}`)
 }
 </script>
 
@@ -65,19 +44,6 @@ const handleDelete = async (id: number) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-}
-
-.create-btn {
-  background-color: #41B883;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-}
-
-.create-btn:hover {
-  opacity: 0.8;
 }
 
 ul {
@@ -96,6 +62,15 @@ li {
   gap: 1rem;
 }
 
+.post-item {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.post-item:hover {
+  background-color: #f9f9f9;
+}
+
 h2 {
   font-size: 1rem;
   margin: 0;
@@ -111,36 +86,5 @@ h3, p {
   border-radius: 0.5rem;
   display: inline-block;
   font-size: 0.8rem;
-}
-
-.button-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.edit-btn {
-  background-color: #35495E;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  cursor: pointer;
-  border-radius: 0.5rem;
-}
-
-.edit-btn:hover {
-  opacity: 0.8;
-}
-
-.delete-btn {
-  background-color: #e74c3c;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  cursor: pointer;
-  border-radius: 0.5rem;
-}
-
-.delete-btn:hover {
-  opacity: 0.8;
 }
 </style>

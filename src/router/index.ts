@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "@/views/Login.vue";
 import GoogleCallback from "@/views/GoogleCallback.vue";
-import PostList from "@/components/PostList.vue"; // ← 後で views に移動予定
-import PostForm from "@/components/PostForm.vue";
-import PostEdit from "@/components/PostEdit.vue";
+import PostList from "@/views/PostList.vue";
+import PostForm from "@/views/PostForm.vue";
+import PostEdit from "@/views/PostEdit.vue";
+import PostDetail from "@/views/PostDetail.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -35,6 +36,12 @@ const router = createRouter({
       path: "/posts/create",
       name: "posts-create",
       component: PostForm,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/posts/:id",
+      name: "posts-detail",
+      component: PostDetail,
       meta: { requiresAuth: true },
     },
     {

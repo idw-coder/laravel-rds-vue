@@ -10,12 +10,21 @@ export interface Post {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  user?: {
+    name: string;
+  };
 }
 
 export const postsApi = {
   // 一覧取得
   async getAll(): Promise<Post[]> {
     const response = await fetchWithAuth(`${API_BASE}/posts`);
+    return response.json();
+  },
+
+  // 詳細取得
+  async getById(id: number): Promise<Post> {
+    const response = await fetchWithAuth(`${API_BASE}/posts/${id}`);
     return response.json();
   },
 
