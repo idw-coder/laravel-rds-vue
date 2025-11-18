@@ -6,6 +6,7 @@
         <nav class="nav-container">
           <router-link class="nav-link" to="/posts">投稿一覧</router-link>
           <router-link class="nav-link" to="/posts/create">新規作成</router-link>
+          <router-link class="nav-link" to="/profile">プロフィール</router-link>
 
           <button @click="handleLogout" class="logout-btn">ログアウト</button>
         </nav>
@@ -100,6 +101,6 @@ header {
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0 1rem;
 }
 </style>

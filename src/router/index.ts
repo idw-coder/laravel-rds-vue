@@ -5,6 +5,7 @@ import PostList from "@/views/PostList.vue";
 import PostForm from "@/views/PostForm.vue";
 import PostEdit from "@/views/PostEdit.vue";
 import PostDetail from "@/views/PostDetail.vue";
+import Profile from "@/views/Profile.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -48,6 +49,12 @@ const router = createRouter({
       path: "/posts/:id/edit",
       name: "posts-edit",
       component: PostEdit,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/profile",
+      name: "profile",
+      component: Profile,
       meta: { requiresAuth: true },
     },
   ],

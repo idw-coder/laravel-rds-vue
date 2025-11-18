@@ -83,7 +83,7 @@ h3, p {
 .status-label {
   background-color: #f0f0f0;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   display: inline-block;
   font-size: 0.8rem;
 }

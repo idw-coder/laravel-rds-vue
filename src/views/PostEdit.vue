@@ -91,7 +91,7 @@ input, textarea, select {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #ddd;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   box-sizing: border-box;
 }
 
@@ -111,7 +111,7 @@ textarea {
 button {
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   cursor: pointer;
 }
 

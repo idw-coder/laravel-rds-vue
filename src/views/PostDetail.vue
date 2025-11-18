@@ -86,7 +86,7 @@
   .status-label {
     background-color: #f0f0f0;
     padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     display: inline-block;
     font-size: 0.8rem;
   }
@@ -102,7 +102,7 @@
   .post-meta {
     padding: 1rem;
     background-color: #f9f9f9;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
   }
   
   .post-meta p {
@@ -122,7 +122,7 @@
     padding: 0.5rem 1rem;
     border: none;
     cursor: pointer;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
   }
   
   .edit-btn:hover {
@@ -135,7 +135,7 @@
     padding: 0.5rem 1rem;
     border: none;
     cursor: pointer;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
   }
   
   .delete-btn:hover {
