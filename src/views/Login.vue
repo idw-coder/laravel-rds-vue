@@ -6,7 +6,7 @@
       <form @submit.prevent="handleLogin">
         <div>
           <label>Email</label>
-          <input v-model="email" type="email" placeholder="test@example.com" />
+          <input v-model="email" type="email" placeholder="free@example.com" />
         </div>
 
         <div>
