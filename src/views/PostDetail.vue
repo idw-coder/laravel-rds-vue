@@ -25,6 +25,9 @@
           <button @click="goToEdit" class="edit-btn">編集</button>
           <button @click="handleDelete" class="delete-btn">削除</button>
         </div>
+
+        <!-- Googleアドセンス -->
+        <GoogleAdsense ad-slot="7947018211" />
       </div>
     </div>
     <p v-else>読み込み中...</p>
@@ -34,6 +37,7 @@
   import { ref, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { postsApi, type Post } from '@/api/posts'
+  import GoogleAdsense from '@/components/GoogleAdsense.vue'
   
   const router = useRouter()
   const route = useRoute()

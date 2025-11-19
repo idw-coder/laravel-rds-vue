@@ -16,6 +16,9 @@
       </li>
     </ul>
     <p v-else>投稿がありません</p>
+
+    <!-- Googleアドセンス -->
+    <GoogleAdsense ad-slot="7947018211" />
   </div>
 </template>
 
@@ -23,6 +26,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { postsApi, type Post } from '../api/posts'
+import GoogleAdsense from '@/components/GoogleAdsense.vue'
 
 const router = useRouter()
 const posts = ref<Post[]>([])

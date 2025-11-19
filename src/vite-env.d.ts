@@ -9,3 +9,12 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+// Googleアドセンスの型定義
+declare global {
+  interface Window {
+    adsbygoogle: any[]
+  }
+}
+
+export {}
+
