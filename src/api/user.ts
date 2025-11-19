@@ -2,11 +2,16 @@ import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
 
+export interface Role {
+  label: string;
+}
+
 export interface User {
   id: number;
   name: string;
   email: string;
   google_id?: string | null;
+  roles?: Role[];
   created_at?: string;
   updated_at?: string;
 }

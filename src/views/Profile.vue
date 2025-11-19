@@ -16,6 +16,15 @@
       </div>
 
       <div class="form-group">
+        <label>ロール</label>
+        <p>
+          <span v-for="(role, index) in roles" :key="index" class="role-label">
+            {{ role.label }}<span v-if="index < roles.length - 1">, </span>
+          </span>
+        </p>
+      </div>
+
+      <div class="form-group">
         <label>新しいパスワード（変更する場合のみ）</label>
         <input v-model="form.password" type="password" autocomplete="new-password" />
       </div>
@@ -41,13 +50,14 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { userApi, type UpdateProfileData } from '@/api/user'
+import { userApi, type UpdateProfileData, type Role } from '@/api/user'
 
 const router = useRouter()
 const isLoading = ref(true)
 const isSaving = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const roles = ref<Role[]>([])
 
 const form = reactive<UpdateProfileData>({
   name: '',
@@ -59,8 +69,10 @@ const form = reactive<UpdateProfileData>({
 onMounted(async () => {
   try {
     const user = await userApi.getProfile()
+    console.log("===profile===", user)
     form.name = user.name
     form.email = user.email
+    roles.value = user.roles || []
   } catch (error) {
     errorMessage.value = 'プロフィールの取得に失敗しました'
   } finally {
@@ -135,6 +147,13 @@ input {
   border: 1px solid #ddd;
   border-radius: 0.25rem;
   box-sizing: border-box;
+}
+
+.role-label {
+  background-color: #f0f0f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
 }
 
 .error {

@@ -11,7 +11,7 @@
 
         <div>
           <label>Password</label>
-          <input v-model="password" type="password" placeholder="password123" />
+          <input v-model="password" type="password" placeholder="password" />
         </div>
 
         <button type="submit" :disabled="isLoading" :class="{ 'loading': isLoading }">

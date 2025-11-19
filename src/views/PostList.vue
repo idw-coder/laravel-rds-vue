@@ -102,7 +102,7 @@ h3, p {
 }
 
 .post-meta {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #666;
   display: flex;
   justify-content: space-between;
@@ -117,6 +117,14 @@ h3, p {
   align-items: center;
 }
 
+@media (max-width: 768px) {
+  .post-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
 .post-meta span {
   display: inline-flex;
   align-items: center;
@@ -124,7 +132,6 @@ h3, p {
 }
 
 .post-meta i {
-  font-size: 0.75rem;
   color: #999;
 }
 
@@ -132,6 +139,6 @@ h3, p {
   background-color: #f0f0f0;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
 }
 </style>
