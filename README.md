@@ -1,51 +1,5 @@
 # laravel-rds-vue
 
-## sharing_content_throw_to_ai
-
-Laravel（バックエンド API）+ Vue 3（フロントエンド）の Web アプリケーション
-
-### 技術スタック
-
-フロントエンド: Vue 3 + TypeScript + Vue Router
-
-リポジトリ: https://github.com/idw-coder/laravel-rds-vue.git
-本番環境: https://laravel-rds-app.bizlabo.site
-
-バックエンド: Laravel 11 + Laravel Sanctum + Socialite
-
-本番環境: https://laravel-rds-api.bizlabo.site
-
-
-### 認証方式
-
-メールアドレス/パスワード認証（実装済み）
-Google OAuth 認証（実装済み）
-トークンベース認証（Laravel Sanctum）
-
-
-### 現在実装済みの機能
-
-ログイン画面（メール/パスワード + Google OAuth）
-投稿一覧画面（posts）
-投稿作成画面（posts/create）
-投稿編集画面（posts/:id/edit）
-認証ガード（未ログインユーザーのリダイレクト）
-
-### データベース構造
-
-**Users テーブル**:
-- `id`, `google_id` (nullable), `name`, `email`, `password` (nullable), `created_at`, `updated_at`
-
-**Posts テーブル**:
-- `id`, `title`, `content`, `status`, `created_at`, `updated_at`, `deleted_at`
-- **注意**: `user_id` カラムが存在しないため、投稿とユーザーの関連付けができていません
-
-### デプロイ構成
-ローカルではLaravel、MySQLはDocker Sail環境、Vueはnpm run dev で開発サーバーを使用
-フロントエンド（Vue）、バックエンド（Laravel）はlightsailに
-Github ActionでmainブランチプッシュをトリガーにデプロイされるようCI/CDを導入
-MySQLはRDSを使用
-
 ## personal_memo
 
 ### fetch → fetchWithAuth

@@ -5,10 +5,6 @@
       </div>
   
       <div class="post-content">
-        <div class="status-box">
-          <span class="status-label">{{ post.status }}</span>
-        </div>
-        
         <h3>{{ post.title }}</h3>
   
         <div class="post-body">
@@ -16,9 +12,14 @@
         </div>
   
         <div class="post-meta">
-          <p><strong>作成者:</strong> {{ post.user?.name || '不明' }}</p>
-          <p><strong>作成日:</strong> {{ formatDate(post.created_at) }}</p>
-          <p><strong>更新日:</strong> {{ formatDate(post.updated_at) }}</p>
+          <div class="post-meta-left">
+            <span><i class="fas fa-user"></i> {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}</span>
+            <span class="status-label">{{ post.status }}</span>
+          </div>
+          <div class="post-meta-right">
+            <span><i class="fas fa-calendar-plus"></i> {{ formatDate(post.created_at) }}</span>
+            <span><i class="fas fa-calendar-check"></i> {{ formatDate(post.updated_at) }}</span>
+          </div>
         </div>
   
         <div class="button-group">
@@ -27,14 +28,14 @@
         </div>
 
         <!-- Googleアドセンス -->
-        <GoogleAdsense ad-slot="7947018211" />
+        <GoogleAdsense v-if="!isLocalhost" ad-slot="7947018211" />
       </div>
     </div>
     <p v-else>読み込み中...</p>
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, computed } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { postsApi, type Post } from '@/api/posts'
   import GoogleAdsense from '@/components/GoogleAdsense.vue'
@@ -42,6 +43,10 @@
   const router = useRouter()
   const route = useRoute()
   const post = ref<Post | null>(null)
+
+  const isLocalhost = computed(() => {
+    return typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  })
   
   onMounted(async () => {
     const id = Number(route.params.id)
@@ -50,7 +55,7 @@
   
   const formatDate = (date: string | undefined) => {
     if (!date) return '-'
-    return new Date(date).toLocaleString('ja-JP')
+    return new Date(date).toLocaleDateString('ja-JP')
   }
   
   const goToEdit = () => {
@@ -87,14 +92,6 @@
     margin: 0;
   }
   
-  .status-label {
-    background-color: #f0f0f0;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    display: inline-block;
-    font-size: 0.8rem;
-  }
-  
   .post-body {
     line-height: 1.6;
   }
@@ -104,15 +101,30 @@
   }
   
   .post-meta {
-    padding: 1rem;
-    background-color: #f9f9f9;
-    border-radius: 0.25rem;
-  }
-  
-  .post-meta p {
-    margin: 0.5rem 0;
     font-size: 0.9rem;
     color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .post-meta-left,
+  .post-meta-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .post-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .post-meta i {
+    font-size: 0.75rem;
+    color: #999;
   }
   
   .button-group {
@@ -144,5 +156,12 @@
   
   .delete-btn:hover {
     opacity: 0.8;
+  }
+
+  .status-label {
+    background-color: #f0f0f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
   }
   </style>

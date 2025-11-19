@@ -10,8 +10,10 @@ export interface Post {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  user_id?: number;
   user?: {
-    name: string;
+    id?: number;
+    name?: string;
   };
 }
 
