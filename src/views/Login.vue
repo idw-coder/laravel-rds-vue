@@ -57,6 +57,9 @@ const handleLogin = async () => {
     });
 
     localStorage.setItem("token", res.token);
+    
+    // ユーザー情報を保存
+    localStorage.setItem("user", JSON.stringify(res.user));
 
     router.push("/posts");
   } catch (e) {
@@ -105,6 +108,8 @@ const handleGoogleCallback = (event: MessageEvent) => {
 
   if (event.data.token) {
     localStorage.setItem("token", event.data.token);
+    
+    // ユーザー情報を保存
     localStorage.setItem("user", JSON.stringify(event.data.user));
     window.removeEventListener("message", handleGoogleCallback);
     isLoading.value = false;

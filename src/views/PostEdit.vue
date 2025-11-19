@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { postsApi } from '../api/posts'
+import { postsApi, type Post } from '../api/posts'
 
 const router = useRouter()
 const route = useRoute()
@@ -40,6 +40,23 @@ const form = reactive({
   status: 'draft'
 })
 
+// 現在のユーザーIDを取得
+const getCurrentUserId = (): number | null => {
+  try {
+    const userStr = localStorage.getItem('user')
+    if (!userStr) return null
+    const user = JSON.parse(userStr)
+    return user?.id || null
+  } catch {
+    return null
+  }
+}
+
+// 投稿のユーザーIDを取得
+const getPostUserId = (post: Post): number | null => {
+  return post.user_id || post.user?.id || null
+}
+
 // 編集対象を取得
 onMounted(async () => {
   const id = Number(route.params.id)
@@ -47,6 +64,14 @@ onMounted(async () => {
   const post = posts.find(p => p.id === id)
   
   if (post) {
+    // ユーザーIDが異なる場合はリダイレクト
+    const currentUserId = getCurrentUserId()
+    const postUserId = getPostUserId(post)
+    if (currentUserId === null || postUserId === null || currentUserId !== postUserId) {
+      router.push('/posts')
+      return
+    }
+    
     form.title = post.title
     form.content = post.content
     form.status = post.status

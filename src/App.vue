@@ -48,11 +48,20 @@ router.afterEach(() => {
 
 const handleLogout = async () => {
   try {
+    // バックエンド側のトークンを無効化
     await authApi.logout();
   } catch (e) {
     console.error("ログアウトエラー:", e);
+  } finally {
+    // 成功・失敗に関わらず、フロントエンドの情報を必ず消す
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // 状態を即座に更新（router.afterEachを待たずにUIを消すため）
+    isLoggedIn.value = false;
+
+    router.push("/login");
   }
-  router.push("/login");
 };
 </script>
 

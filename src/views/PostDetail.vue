@@ -22,7 +22,7 @@
           </div>
         </div>
   
-        <div class="button-group">
+        <div class="button-group" v-if="isOwner">
           <button @click="goToEdit" class="edit-btn">編集</button>
           <button @click="handleDelete" class="delete-btn">削除</button>
         </div>
@@ -46,6 +46,31 @@
 
   const isLocalhost = computed(() => {
     return typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  })
+
+  // 現在のユーザーIDを取得
+  const getCurrentUserId = (): number | null => {
+    try {
+      const userStr = localStorage.getItem('user')
+      if (!userStr) return null
+      const user = JSON.parse(userStr)
+      return user?.id || null
+    } catch {
+      return null
+    }
+  }
+
+  // 投稿のユーザーIDを取得
+  const getPostUserId = (post: Post): number | null => {
+    return post.user_id || post.user?.id || null
+  }
+
+  // 現在のユーザーが投稿の所有者かどうか
+  const isOwner = computed(() => {
+    if (!post.value) return false
+    const currentUserId = getCurrentUserId()
+    const postUserId = getPostUserId(post.value)
+    return currentUserId !== null && postUserId !== null && currentUserId === postUserId
   })
   
   onMounted(async () => {
