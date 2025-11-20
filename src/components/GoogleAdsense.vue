@@ -31,13 +31,17 @@ withDefaults(defineProps<Props>(), {
 onMounted(async () => {
   await nextTick()
   try {
-    if ((window as any).adsbygoogle) {
-      const adsbygoogle = (window as any).adsbygoogle || []
-      ;(window as any).adsbygoogle = adsbygoogle
+    // adsbygoogle が配列の場合は push、そうでない場合は適切に初期化
+    const adsbygoogle = (window as any).adsbygoogle || []
+    if (Array.isArray(adsbygoogle)) {
       adsbygoogle.push({})
+    } else if (!adsbygoogle.loaded) {
+      adsbygoogle.loaded = true
+      adsbygoogle.requestNonPersonalizedAds = 0
     }
   } catch (e) {
     // 開発環境でのエラーは無視
+    console.error('AdSense error:', e)
   }
 })
 </script>
