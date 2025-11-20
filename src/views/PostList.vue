@@ -180,9 +180,9 @@ h3, p {
 
 .ad-container {
   margin-top: 2rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  min-width: 300px;
+  display: block;
 }
 
 .pagination {

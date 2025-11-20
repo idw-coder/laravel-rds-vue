@@ -1,6 +1,7 @@
 <template>
   <div ref="containerRef" class="adsense-container">
     <ins
+      ref="insRef"
       class="adsbygoogle"
       style="display:block"
       :data-ad-client="adClient"
@@ -29,6 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const containerRef = ref<HTMLElement | null>(null)
+const insRef = ref<HTMLElement | null>(null)
 
 onMounted(async () => {
   await nextTick()
@@ -56,22 +58,38 @@ onMounted(async () => {
   await waitForAdSenseScript()
   
   // DOMが完全にレンダリングされ、要素のサイズが確定するまで待つ
-  const initAdSense = () => {
+  const waitForElementSize = () => {
     return new Promise<void>((resolve) => {
       let attempts = 0
       const checkSize = () => {
         attempts++
-        if (containerRef.value) {
-          const width = containerRef.value.offsetWidth
-          if (width > 0) {
+        
+        // ins要素とコンテナの両方を確認
+        const insElement = insRef.value
+        const containerElement = containerRef.value
+        
+        if (insElement && containerElement) {
+          // getBoundingClientRect で実際のサイズを確認
+          const containerRect = containerElement.getBoundingClientRect()
+          const insRect = insElement.getBoundingClientRect()
+          
+          // コンテナの幅が300px以上あることを確認（広告の最小幅）
+          if (containerRect.width >= 300 || containerElement.offsetWidth >= 300) {
+            console.log('AdSense element size confirmed:', {
+              containerWidth: containerRect.width,
+              containerOffsetWidth: containerElement.offsetWidth,
+              insWidth: insRect.width
+            })
             resolve()
             return
           }
         }
-        // 最大5秒待機
-        if (attempts < 50) {
+        
+        // 最大10秒待機（100回 × 100ms）
+        if (attempts < 100) {
           requestAnimationFrame(checkSize)
         } else {
+          console.warn('AdSense size check timeout, attempting initialization anyway')
           resolve() // タイムアウトしても初期化を試みる
         }
       }
@@ -79,10 +97,21 @@ onMounted(async () => {
     })
   }
   
-  await initAdSense()
+  await waitForElementSize()
   
   // さらに少し待機してから初期化（レイアウトが完全に確定するまで）
-  await new Promise(resolve => setTimeout(resolve, 200))
+  await new Promise(resolve => setTimeout(resolve, 500))
+  
+  // 再度サイズを確認
+  if (containerRef.value) {
+    const finalWidth = containerRef.value.getBoundingClientRect().width
+    console.log('Final container width before init:', finalWidth)
+    
+    if (finalWidth === 0) {
+      console.error('Container width is still 0, cannot initialize AdSense')
+      return
+    }
+  }
   
   try {
     // Google AdSense の標準的な初期化方法
@@ -104,6 +133,10 @@ onMounted(async () => {
 <style scoped>
 .adsense-container {
   margin: 1rem 0;
+  width: 100%;
+  min-width: 300px;
+  min-height: 100px;
+  display: block;
 }
 </style>
 
