@@ -123,7 +123,7 @@ const handleGoogleCallback = (event: MessageEvent) => {
 
 <style scoped>
 #login {
-  min-height: 100vh;
+  min-height: calc(100vh - 60px - 1rem);
   display: flex;
   justify-content: center;
   align-items: center;

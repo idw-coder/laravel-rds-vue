@@ -1,21 +1,22 @@
 <template>
   <div id="app">
-    <header v-if="isLoggedIn">
+    <header>
       <div class="header-container">
         <router-link to="/">
           <h1>Laravel API + Vue 3</h1>
         </router-link>
         <nav class="nav-container">
           <router-link class="nav-link" to="/posts">投稿一覧</router-link>
-          <router-link class="nav-link" to="/posts/create">新規作成</router-link>
+          <router-link v-if="isLoggedIn" class="nav-link" to="/posts/create">新規作成</router-link>
 
           <div class="user-menu">
             <div class="user-icon">
               <i class="fas fa-user-circle"></i>
             </div>
             <div class="dropdown-menu">
-              <router-link class="dropdown-item" to="/profile">プロフィール</router-link>
-              <button @click="handleLogout" class="dropdown-item logout-item">ログアウト</button>
+              <router-link v-if="isLoggedIn" class="dropdown-item" to="/profile">プロフィール</router-link>
+              <router-link v-else class="dropdown-item" to="/login">ログイン</router-link>
+              <button v-if="isLoggedIn" @click="handleLogout" class="dropdown-item logout-item">ログアウト</button>
             </div>
           </div>
         </nav>
@@ -88,8 +89,9 @@ header {
 
 .header-container {
   max-width: 800px;
+  height: 60px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;

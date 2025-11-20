@@ -17,8 +17,10 @@ const router = createRouter({
         /**
          * localStorage.getItemはWeb APIのメソッドで、localStorageから指定したキーの値を取得
          */
-        const isLoggedIn = localStorage.getItem("token") !== null;
-        return isLoggedIn ? "/posts" : "/login";
+
+        // const isLoggedIn = localStorage.getItem("token") !== null;
+        // return isLoggedIn ? "/posts" : "/login";
+        return "/posts";
       },
     },
     { path: "/login", name: "login", component: Login },
@@ -32,7 +34,7 @@ const router = createRouter({
       path: "/posts",
       name: "posts",
       component: PostList,
-      meta: { requiresAuth: true },
+      // meta: { requiresAuth: true },
     },
     {
       path: "/posts/create",
@@ -44,7 +46,7 @@ const router = createRouter({
       path: "/posts/:id",
       name: "posts-detail",
       component: PostDetail,
-      meta: { requiresAuth: true },
+      // meta: { requiresAuth: true },
     },
     {
       path: "/posts/:id/edit",

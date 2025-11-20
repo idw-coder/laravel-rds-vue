@@ -126,7 +126,7 @@ h3, p {
 }
 
 .post-meta span {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.25rem;
 }
