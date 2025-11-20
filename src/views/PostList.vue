@@ -44,7 +44,7 @@
     </div>
 
     <!-- Googleアドセンスをページ最下部に表示 -->
-    <div v-if="!isLocalhost" class="ad-container">
+    <div v-if="!isLocalhost && posts.length > 0" class="ad-container">
       <GoogleAdsense ad-slot="7947018211" />
     </div>
   </div>
@@ -85,6 +85,8 @@ const formatDate = (date: string | undefined) => {
 // 初期データ取得
 onMounted(async () => {
   posts.value = await postsApi.getAll()
+  // デバッグ用: isLocalhost の値を確認
+  console.log('isLocalhost:', isLocalhost.value, 'hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A')
 })
 
 // 詳細ページへ（追加）

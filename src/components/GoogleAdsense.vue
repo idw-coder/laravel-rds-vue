@@ -33,10 +33,34 @@ const containerRef = ref<HTMLElement | null>(null)
 onMounted(async () => {
   await nextTick()
   
+  // Google AdSense スクリプトの読み込みを待つ
+  const waitForAdSenseScript = () => {
+    return new Promise<void>((resolve) => {
+      if ((window as any).adsbygoogle) {
+        resolve()
+        return
+      }
+      
+      // スクリプトが読み込まれるまで待機（最大10秒）
+      let attempts = 0
+      const checkInterval = setInterval(() => {
+        attempts++
+        if ((window as any).adsbygoogle || attempts > 100) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+      }, 100)
+    })
+  }
+  
+  await waitForAdSenseScript()
+  
   // DOMが完全にレンダリングされ、要素のサイズが確定するまで待つ
   const initAdSense = () => {
     return new Promise<void>((resolve) => {
+      let attempts = 0
       const checkSize = () => {
+        attempts++
         if (containerRef.value) {
           const width = containerRef.value.offsetWidth
           if (width > 0) {
@@ -44,7 +68,12 @@ onMounted(async () => {
             return
           }
         }
-        requestAnimationFrame(checkSize)
+        // 最大5秒待機
+        if (attempts < 50) {
+          requestAnimationFrame(checkSize)
+        } else {
+          resolve() // タイムアウトしても初期化を試みる
+        }
       }
       requestAnimationFrame(checkSize)
     })
@@ -53,7 +82,7 @@ onMounted(async () => {
   await initAdSense()
   
   // さらに少し待機してから初期化（レイアウトが完全に確定するまで）
-  await new Promise(resolve => setTimeout(resolve, 100))
+  await new Promise(resolve => setTimeout(resolve, 200))
   
   try {
     // Google AdSense の標準的な初期化方法
@@ -61,10 +90,12 @@ onMounted(async () => {
     if (!(window as any).adsbygoogle) {
       ;(window as any).adsbygoogle = []
     }
+    
     // 広告を初期化
     ;(window as any).adsbygoogle.push({})
+    
+    console.log('AdSense initialized successfully')
   } catch (e) {
-    // 開発環境でのエラーは無視
     console.error('AdSense error:', e)
   }
 })
