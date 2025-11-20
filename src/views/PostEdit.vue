@@ -17,6 +17,7 @@
           <option value="published">公開</option>
         </select>
       </div>
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       <div class="button-group">
         <button type="submit">更新</button>
         <button type="button" @click="goBack">キャンセル</button>
@@ -27,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { postsApi, type Post } from '../api/posts'
 
@@ -78,16 +79,19 @@ onMounted(async () => {
   }
 })
 
+const errorMessage = ref('')
+
 const handleSubmit = async () => {
   console.log('handleSubmit called', { id: route.params.id, form })
   try {
+    errorMessage.value = ''
     const id = Number(route.params.id)
     await postsApi.update(id, form)
     console.log('=== Update successful ===')
     router.push('/posts')
-  } catch (error) {
+  } catch (error: any) {
     console.error('=== Update error ===', error)
-    alert('更新に失敗しました: ' + (error instanceof Error ? error.message : String(error)))
+    errorMessage.value = error.message || '更新に失敗しました'
   }
 }
 
@@ -163,5 +167,10 @@ button[type="button"] {
 
 button[type="button"]:hover {
   opacity: 0.8;
+}
+
+.error {
+  color: #e74c3c;
+  margin-top: 0.5rem;
 }
 </style>

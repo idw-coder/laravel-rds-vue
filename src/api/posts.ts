@@ -45,6 +45,14 @@ export const postsApi = {
       method: "POST",
       body: JSON.stringify(post),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.message || `投稿の作成に失敗しました (${response.status})`);
+      if (response.status === 403) {
+        (error as any).status = 403;
+      }
+      throw error;
+    }
     return response.json();
   },
 

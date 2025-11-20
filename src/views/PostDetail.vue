@@ -17,8 +17,8 @@
             <span class="status-label">{{ post.status }}</span>
           </div>
           <div class="post-meta-right">
-            <span><i class="fas fa-calendar-plus"></i> {{ formatDate(post.created_at) }}</span>
-            <span><i class="fas fa-calendar-check"></i> {{ formatDate(post.updated_at) }}</span>
+            <span><i class="fas fa-edit"></i> {{ formatDate(post.created_at) }}</span>
+            <span><i class="fas fa-sync-alt"></i> {{ formatDate(post.updated_at) }}</span>
           </div>
         </div>
   
@@ -136,12 +136,20 @@
   }
   
   .post-meta {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     color: #666;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .post-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
   }
 
   .post-meta-left,
@@ -158,7 +166,7 @@
   }
 
   .post-meta i {
-    font-size: 0.75rem;
+    font-size: 0.5rem;
     color: #999;
   }
   

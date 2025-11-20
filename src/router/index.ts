@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "@/views/Login.vue";
+import Register from "@/views/Register.vue";
 import GoogleCallback from "@/views/GoogleCallback.vue";
 import PostList from "@/views/PostList.vue";
 import PostForm from "@/views/PostForm.vue";
@@ -24,6 +25,11 @@ const router = createRouter({
       },
     },
     { path: "/login", name: "login", component: Login },
+    { 
+      path: "/register",
+      name: "register",
+      component: Register,
+    },
     { 
       path: "/auth/google/callback", 
       name: "google-callback", 

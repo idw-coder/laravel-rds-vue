@@ -21,6 +21,11 @@
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       </form>
 
+      <p class="register-link">
+        アカウントをお持ちでない方は
+        <router-link to="/register">こちらから新規登録</router-link>
+      </p>
+
       <!-- 区切り線 -->
       <div class="divider">または</div>
 
@@ -138,6 +143,7 @@ const handleGoogleCallback = (event: MessageEvent) => {
 h2 {
   font-size: 1rem;
   margin-top: 0;
+  text-align: center;
 }
 label {
   display: block;
@@ -157,6 +163,11 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+button:hover {
+  opacity: 0.8;
 }
 button:disabled {
   background-color: #ccc;
@@ -205,5 +216,22 @@ button.loading {
 }
 .google-btn:hover:not(:disabled) {
   background: #f5f5f5;
+}
+
+/* 新規登録リンク */
+.register-link {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #666;
+}
+.register-link a {
+  color: #41b883;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.register-link a:hover {
+  text-decoration: underline;
+  color: #35a372;
 }
 </style>

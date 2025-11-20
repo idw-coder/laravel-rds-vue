@@ -17,8 +17,8 @@
               <span class="status-label">{{ post.status }}</span>
             </div>
             <div class="post-meta-right">
-              <span><i class="fas fa-calendar-plus"></i> {{ formatDate(post.created_at) }}</span>
-              <span><i class="fas fa-calendar-check"></i> {{ formatDate(post.updated_at) }}</span>
+              <span><i class="fas fa-edit"></i> {{ formatDate(post.created_at) }}</span>
+              <span><i class="fas fa-sync-alt"></i> {{ formatDate(post.updated_at) }}</span>
             </div>
           </div>
         </li>

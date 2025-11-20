@@ -60,6 +60,43 @@ export const authApi = {
     }
   },
 
+  async register(payload: {
+    name: string;
+    email: string;
+    password: string;
+  }): Promise<LoginResponse> {
+    try {
+      const res = await fetch(`${API_BASE}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        let errorData: { message?: string; error?: string } = {};
+        try {
+          errorData = await res.json();
+        } catch {}
+
+        if (errorData.error) {
+          throw new Error("システムエラーです");
+        }
+
+        throw new Error(errorData.message || "登録に失敗しました");
+      }
+
+      return res.json();
+    } catch (error) {
+      console.error("Register error:", error);
+
+      if (error instanceof TypeError) {
+        throw new Error("サーバーに接続できません");
+      }
+
+      throw error;
+    }
+  },
+
   async logout(): Promise<void> {
     const token = localStorage.getItem("token");
 

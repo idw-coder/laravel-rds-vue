@@ -7,7 +7,7 @@
         </router-link>
         <nav class="nav-container">
           <router-link class="nav-link" to="/posts">投稿一覧</router-link>
-          <router-link v-if="isLoggedIn" class="nav-link" to="/posts/create">新規作成</router-link>
+          <router-link v-if="canCreatePost" class="nav-link" to="/posts/create">新規作成</router-link>
 
           <div class="user-menu">
             <div class="user-icon">
@@ -15,7 +15,8 @@
             </div>
             <div class="dropdown-menu">
               <router-link v-if="isLoggedIn" class="dropdown-item" to="/profile">プロフィール</router-link>
-              <router-link v-else class="dropdown-item" to="/login">ログイン</router-link>
+              <router-link v-if="!isLoggedIn" class="dropdown-item" to="/login">ログイン</router-link>
+              <router-link v-if="!isLoggedIn" class="dropdown-item" to="/register">新規登録</router-link>
               <button v-if="isLoggedIn" @click="handleLogout" class="dropdown-item logout-item">ログアウト</button>
             </div>
           </div>
@@ -30,9 +31,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { authApi } from "./api/auth";
+import { userApi, type User } from "./api/user";
 
 const router = useRouter();
 /**
@@ -41,10 +43,73 @@ const router = useRouter();
  */
 // const isLoggedIn = computed(() => localStorage.getItem("token") !== null)
 const isLoggedIn = ref(localStorage.getItem("token") !== null);
+const userRoles = ref<{ name?: string; label?: string }[]>([]);
 
-// ルート変更時にログイン状態を再チェック
+// ユーザー情報からロールを取得
+const getUserRoles = (): { name?: string; label?: string }[] => {
+  try {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return [];
+    const user: User = JSON.parse(userStr);
+    return user.roles || [];
+  } catch {
+    return [];
+  }
+};
+
+// ロール情報を更新
+const updateUserRoles = async () => {
+  if (!isLoggedIn.value) {
+    userRoles.value = [];
+    return;
+  }
+
+  // localStorageからロール情報を取得
+  const roles = getUserRoles();
+  
+  // ロール情報がない場合はプロフィールAPIから取得
+  if (roles.length === 0) {
+    try {
+      const user = await userApi.getProfile();
+      userRoles.value = user.roles || [];
+      // localStorageのユーザー情報を更新
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const currentUser: User = JSON.parse(userStr);
+        currentUser.roles = user.roles;
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      }
+    } catch (error) {
+      console.error("Failed to fetch user roles:", error);
+      userRoles.value = [];
+    }
+  } else {
+    userRoles.value = roles;
+  }
+};
+
+// 投稿作成権限があるかチェック（adminまたはpaidロール）
+const canCreatePost = computed(() => {
+  if (!isLoggedIn.value) return false;
+  return userRoles.value.some(
+    (role) => role.name === "admin" || role.name === "paid"
+  );
+});
+
+// ルート変更時にログイン状態とロール情報を再チェック
 router.afterEach(() => {
+  const wasLoggedIn = isLoggedIn.value;
   isLoggedIn.value = localStorage.getItem("token") !== null;
+  
+  // ログイン状態が変わった場合、またはログインしている場合はロール情報を更新
+  if (wasLoggedIn !== isLoggedIn.value || isLoggedIn.value) {
+    updateUserRoles();
+  }
+});
+
+// 初回マウント時にロール情報を取得
+onMounted(() => {
+  updateUserRoles();
 });
 
 const handleLogout = async () => {

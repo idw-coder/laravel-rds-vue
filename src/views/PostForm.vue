@@ -17,6 +17,7 @@
             <option value="published">公開</option>
           </select>
         </div>
+        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
         <div class="button-group">
           <button type="submit">投稿</button>
           <button type="button" @click="goBack">キャンセル</button>
@@ -26,11 +27,12 @@
   </template>
   
   <script setup lang="ts">
-  import { reactive } from 'vue'
+  import { reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { postsApi } from '../api/posts'
   
   const router = useRouter()
+  const errorMessage = ref('')
   
   const form = reactive({
     title: '',
@@ -39,8 +41,14 @@
   })
   
   const handleSubmit = async () => {
-    await postsApi.create(form)
-    router.push('/posts')
+    try {
+      errorMessage.value = ''
+      await postsApi.create(form)
+      router.push('/posts')
+    } catch (error: any) {
+      console.error('Create error:', error)
+      errorMessage.value = error.message || '投稿の作成に失敗しました'
+    }
   }
   
   const goBack = () => {
@@ -114,7 +122,12 @@
     color: white;
   }
   
-  button[type="button"]:hover {
-    opacity: 0.8;
-  }
-  </style>
+button[type="button"]:hover {
+  opacity: 0.8;
+}
+
+.error {
+  color: #e74c3c;
+  margin-top: 0.5rem;
+}
+</style>
