@@ -74,8 +74,18 @@
   })
   
   onMounted(async () => {
-    const id = Number(route.params.id)
-    post.value = await postsApi.getById(id)
+    try {
+      const id = Number(route.params.id)
+      post.value = await postsApi.getById(id)
+    } catch (error: any) {
+      console.error('投稿の取得に失敗しました:', error)
+      if (error.status === 403) {
+        alert('この投稿にアクセスする権限がありません。')
+      } else {
+        alert(error.message || '投稿の取得に失敗しました。')
+      }
+      router.push('/posts')
+    }
   })
   
   const formatDate = (date: string | undefined) => {

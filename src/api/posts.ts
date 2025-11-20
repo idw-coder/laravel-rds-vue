@@ -27,6 +27,15 @@ export const postsApi = {
   // 詳細取得
   async getById(id: number): Promise<Post> {
     const response = await fetchWithAuth(`${API_BASE}/posts/${id}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const error = new Error(errorData.message || `投稿の取得に失敗しました (${response.status})`)
+      // 403エラーの場合、エラーオブジェクトにstatusを追加
+      if (response.status === 403) {
+        (error as any).status = 403
+      }
+      throw error
+    }
     return response.json();
   },
 
@@ -48,10 +57,17 @@ export const postsApi = {
 
   // 更新
   async update(id: number, post: Partial<Post>): Promise<Post> {
+    console.log('postsApi.update called', { id, post, url: `${API_BASE}/posts/${id}` })
     const response = await fetchWithAuth(`${API_BASE}/posts/${id}`, {
       method: "PUT",
       body: JSON.stringify(post),
     });
+    console.log('postsApi.update response', { status: response.status, ok: response.ok })
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('postsApi.update error', errorData)
+      throw new Error(errorData.message || `更新に失敗しました (${response.status})`)
+    }
     return response.json();
   },
 };

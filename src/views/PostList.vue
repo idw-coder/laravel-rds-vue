@@ -6,26 +6,29 @@
     </div>
 
     <ul v-if="posts.length">
-      <li v-for="post in posts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
-        <h3>{{ post.title }}</h3>
-        <p>{{ post.content }}</p>
+      <template v-for="(post, index) in posts" :key="post.id">
+        <li @click="goToDetail(post.id!)" class="post-item">
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.content }}</p>
 
-        <div class="post-meta">
-          <div class="post-meta-left">
-            <span><i class="fas fa-user"></i> {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}</span>
-            <span class="status-label">{{ post.status }}</span>
+          <div class="post-meta">
+            <div class="post-meta-left">
+              <span><i class="fas fa-user"></i> {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}</span>
+              <span class="status-label">{{ post.status }}</span>
+            </div>
+            <div class="post-meta-right">
+              <span><i class="fas fa-calendar-plus"></i> {{ formatDate(post.created_at) }}</span>
+              <span><i class="fas fa-calendar-check"></i> {{ formatDate(post.updated_at) }}</span>
+            </div>
           </div>
-          <div class="post-meta-right">
-            <span><i class="fas fa-calendar-plus"></i> {{ formatDate(post.created_at) }}</span>
-            <span><i class="fas fa-calendar-check"></i> {{ formatDate(post.updated_at) }}</span>
-          </div>
-        </div>
-      </li>
+        </li>
+        <!-- 4記事ごとにGoogleアドセンスを表示 -->
+        <li v-if="(index + 1) % 4 === 0 && !isLocalhost" class="ad-item">
+          <GoogleAdsense ad-slot="7947018211" />
+        </li>
+      </template>
     </ul>
     <p v-else>投稿がありません</p>
-
-    <!-- Googleアドセンス -->
-    <GoogleAdsense v-if="!isLocalhost" ad-slot="7947018211" />
   </div>
 </template>
 
@@ -85,11 +88,11 @@ li {
 
 .post-item {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s;
 }
 
 .post-item:hover {
-  background-color: #f9f9f9;
+  background-color: rgba(53, 73, 94, 0.1);
 }
 
 h2 {
@@ -140,5 +143,13 @@ h3, p {
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
+}
+
+.ad-item {
+  border: none;
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

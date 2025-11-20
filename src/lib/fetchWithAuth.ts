@@ -27,6 +27,9 @@ export async function fetchWithAuth(
       // （ルーターガードはページ遷移前の防御、こちらはAPI呼び出し後の防御）
       window.location.href = "/login";
     }
-  
+
+    // 403エラー（権限不足）は呼び出し側で処理するため、そのまま返す
+    // 呼び出し側で適切なエラーメッセージを表示できるようにする
+
     return response;
   }

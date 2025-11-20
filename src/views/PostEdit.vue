@@ -79,9 +79,16 @@ onMounted(async () => {
 })
 
 const handleSubmit = async () => {
-  const id = Number(route.params.id)
-  await postsApi.update(id, form)
-  router.push('/posts')
+  console.log('handleSubmit called', { id: route.params.id, form })
+  try {
+    const id = Number(route.params.id)
+    await postsApi.update(id, form)
+    console.log('=== Update successful ===')
+    router.push('/posts')
+  } catch (error) {
+    console.error('=== Update error ===', error)
+    alert('更新に失敗しました: ' + (error instanceof Error ? error.message : String(error)))
+  }
 }
 
 const goBack = () => {
