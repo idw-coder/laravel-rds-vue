@@ -1,5 +1,5 @@
 <template>
-  <div class="adsense-container">
+  <div ref="containerRef" class="adsense-container">
     <ins
       class="adsbygoogle"
       style="display:block"
@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, nextTick } from 'vue'
+import { onMounted, nextTick, ref } from 'vue'
 
 interface Props {
   adClient?: string
@@ -21,15 +21,40 @@ interface Props {
   fullWidthResponsive?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   adClient: 'ca-pub-9549397935875160',
   adSlot: '',
   adFormat: 'auto',
   fullWidthResponsive: true
 })
 
+const containerRef = ref<HTMLElement | null>(null)
+
 onMounted(async () => {
   await nextTick()
+  
+  // DOMが完全にレンダリングされ、要素のサイズが確定するまで待つ
+  const initAdSense = () => {
+    return new Promise<void>((resolve) => {
+      const checkSize = () => {
+        if (containerRef.value) {
+          const width = containerRef.value.offsetWidth
+          if (width > 0) {
+            resolve()
+            return
+          }
+        }
+        requestAnimationFrame(checkSize)
+      }
+      requestAnimationFrame(checkSize)
+    })
+  }
+  
+  await initAdSense()
+  
+  // さらに少し待機してから初期化（レイアウトが完全に確定するまで）
+  await new Promise(resolve => setTimeout(resolve, 100))
+  
   try {
     // Google AdSense の標準的な初期化方法
     // adsbygoogle が存在しない場合は配列として初期化
