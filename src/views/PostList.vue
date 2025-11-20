@@ -5,13 +5,8 @@
       <!-- <button @click="goToCreate" class="create-btn">新規作成</button> -->
     </div>
 
-    <!-- Googleアドセンスをリストの前に表示 -->
-    <div v-if="!isLocalhost" class="ad-container">
-      <GoogleAdsense ad-slot="7947018211" />
-    </div>
-
-    <ul v-if="posts.length">
-      <li v-for="post in posts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
+    <ul v-if="displayedPosts.length">
+      <li v-for="post in displayedPosts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
 
@@ -28,6 +23,30 @@
       </li>
     </ul>
     <p v-else>投稿がありません</p>
+
+    <!-- ページネーション -->
+    <div v-if="totalPages > 1" class="pagination">
+      <button 
+        @click="currentPage--" 
+        :disabled="currentPage === 1"
+        class="page-btn"
+      >
+        前へ
+      </button>
+      <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+      <button 
+        @click="currentPage++" 
+        :disabled="currentPage === totalPages"
+        class="page-btn"
+      >
+        次へ
+      </button>
+    </div>
+
+    <!-- Googleアドセンスをページ最下部に表示 -->
+    <div v-if="!isLocalhost" class="ad-container">
+      <GoogleAdsense ad-slot="7947018211" />
+    </div>
   </div>
 </template>
 
@@ -39,9 +58,22 @@ import GoogleAdsense from '@/components/GoogleAdsense.vue'
 
 const router = useRouter()
 const posts = ref<Post[]>([])
+const currentPage = ref(1)
+const itemsPerPage = 10 // 1ページあたりの表示件数
 
 const isLocalhost = computed(() => {
   return typeof window !== 'undefined' && window.location.hostname === 'localhost'
+})
+
+// ページネーション計算
+const totalPages = computed(() => {
+  return Math.ceil(posts.value.length / itemsPerPage)
+})
+
+const displayedPosts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return posts.value.slice(start, end)
 })
 
 // 日付フォーマット
@@ -145,9 +177,39 @@ h3, p {
 }
 
 .ad-container {
-  margin-bottom: 1rem;
+  margin-top: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.page-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background-color: white;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #f0f0f0;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 0.9rem;
+  color: #666;
 }
 </style>
