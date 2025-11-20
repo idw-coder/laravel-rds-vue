@@ -5,28 +5,27 @@
       <!-- <button @click="goToCreate" class="create-btn">新規作成</button> -->
     </div>
 
-    <ul v-if="posts.length">
-      <template v-for="(post, index) in posts" :key="post.id">
-        <li @click="goToDetail(post.id!)" class="post-item">
-          <h3>{{ post.title }}</h3>
-          <p>{{ post.content }}</p>
+    <!-- Googleアドセンスをリストの前に表示 -->
+    <div v-if="!isLocalhost" class="ad-container">
+      <GoogleAdsense ad-slot="7947018211" />
+    </div>
 
-          <div class="post-meta">
-            <div class="post-meta-left">
-              <span><i class="fas fa-user"></i> {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}</span>
-              <span class="status-label">{{ post.status }}</span>
-            </div>
-            <div class="post-meta-right">
-              <span><i class="fas fa-edit"></i> {{ formatDate(post.created_at) }}</span>
-              <span><i class="fas fa-sync-alt"></i> {{ formatDate(post.updated_at) }}</span>
-            </div>
+    <ul v-if="posts.length">
+      <li v-for="post in posts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content }}</p>
+
+        <div class="post-meta">
+          <div class="post-meta-left">
+            <span><i class="fas fa-user"></i> {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}</span>
+            <span class="status-label">{{ post.status }}</span>
           </div>
-        </li>
-        <!-- 最初の記事の後にGoogleアドセンスを1回だけ表示 -->
-        <li v-if="index === 0 && !isLocalhost" class="ad-item">
-          <GoogleAdsense ad-slot="7947018211" />
-        </li>
-      </template>
+          <div class="post-meta-right">
+            <span><i class="fas fa-edit"></i> {{ formatDate(post.created_at) }}</span>
+            <span><i class="fas fa-sync-alt"></i> {{ formatDate(post.updated_at) }}</span>
+          </div>
+        </div>
+      </li>
     </ul>
     <p v-else>投稿がありません</p>
   </div>
@@ -145,9 +144,8 @@ h3, p {
   font-size: 0.75rem;
 }
 
-.ad-item {
-  border: none;
-  padding: 1rem 0;
+.ad-container {
+  margin-bottom: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
