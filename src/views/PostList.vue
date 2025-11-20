@@ -22,9 +22,9 @@
             </div>
           </div>
         </li>
-        <!-- 4記事ごとにGoogleアドセンスを表示 -->
-        <li v-if="(index + 1) % 4 === 0 && !isLocalhost" class="ad-item" :key="`ad-${index}`">
-          <GoogleAdsense :key="`adsense-${index}`" ad-slot="7947018211" />
+        <!-- 最初の記事の後にGoogleアドセンスを1回だけ表示 -->
+        <li v-if="index === 0 && !isLocalhost" class="ad-item">
+          <GoogleAdsense ad-slot="7947018211" />
         </li>
       </template>
     </ul>
