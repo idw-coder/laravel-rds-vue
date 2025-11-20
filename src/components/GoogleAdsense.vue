@@ -30,6 +30,29 @@ withDefaults(defineProps<Props>(), {
 
 onMounted(async () => {
   await nextTick()
+  
+  // Google AdSense スクリプトの読み込みを待つ
+  const waitForAdSense = () => {
+    return new Promise<void>((resolve) => {
+      if ((window as any).adsbygoogle) {
+        resolve()
+        return
+      }
+      
+      // スクリプトが読み込まれるまで待機（最大5秒）
+      let attempts = 0
+      const checkInterval = setInterval(() => {
+        attempts++
+        if ((window as any).adsbygoogle || attempts > 50) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+      }, 100)
+    })
+  }
+  
+  await waitForAdSense()
+  
   try {
     // Google AdSense の標準的な初期化方法
     // adsbygoogle が存在しない場合は配列として初期化
