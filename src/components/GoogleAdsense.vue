@@ -31,14 +31,13 @@ withDefaults(defineProps<Props>(), {
 onMounted(async () => {
   await nextTick()
   try {
-    // adsbygoogle が配列の場合は push、そうでない場合は適切に初期化
-    const adsbygoogle = (window as any).adsbygoogle || []
-    if (Array.isArray(adsbygoogle)) {
-      adsbygoogle.push({})
-    } else if (!adsbygoogle.loaded) {
-      adsbygoogle.loaded = true
-      adsbygoogle.requestNonPersonalizedAds = 0
+    // Google AdSense の標準的な初期化方法
+    // adsbygoogle が存在しない場合は配列として初期化
+    if (!(window as any).adsbygoogle) {
+      ;(window as any).adsbygoogle = []
     }
+    // 広告を初期化
+    ;(window as any).adsbygoogle.push({})
   } catch (e) {
     // 開発環境でのエラーは無視
     console.error('AdSense error:', e)
