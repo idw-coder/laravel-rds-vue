@@ -7,6 +7,7 @@ import PostForm from "@/views/PostForm.vue";
 import PostEdit from "@/views/PostEdit.vue";
 import PostDetail from "@/views/PostDetail.vue";
 import Profile from "@/views/Profile.vue";
+import TypingGame from "@/views/TypingGame.vue";
 import NotFound from "@/views/NotFound.vue";
 
 const router = createRouter({
@@ -66,6 +67,11 @@ const router = createRouter({
       name: "profile",
       component: Profile,
       meta: { requiresAuth: true },
+    },
+    {
+      path: "/typing-game",
+      name: "typing-game",
+      component: TypingGame,
     },
     {
       path: "/:pathMatch(.*)*",

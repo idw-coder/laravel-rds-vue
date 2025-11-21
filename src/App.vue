@@ -7,6 +7,7 @@
         </router-link>
         <nav class="nav-container">
           <router-link class="nav-link" to="/posts">投稿一覧</router-link>
+          <router-link class="nav-link" to="/typing-game">タイピングゲーム</router-link>
           <router-link v-if="canCreatePost" class="nav-link" to="/posts/create">新規作成</router-link>
 
           <div class="user-menu">
