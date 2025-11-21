@@ -59,7 +59,8 @@
         password: password.value,
       });
   
-      localStorage.setItem("token", res.token);
+      // Laravel Sanctum の認証トークンを保存
+      localStorage.setItem("authToken", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
   
       router.push("/posts");

@@ -17,6 +17,10 @@ export interface Post {
   };
 }
 
+/**
+ * postsApi
+ * @description 投稿API
+ */
 export const postsApi = {
   // 一覧取得
   async getAll(): Promise<Post[]> {

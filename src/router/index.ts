@@ -19,7 +19,8 @@ const router = createRouter({
          * localStorage.getItemはWeb APIのメソッドで、localStorageから指定したキーの値を取得
          */
 
-        // const isLoggedIn = localStorage.getItem("token") !== null;
+        // Laravel Sanctum の認証トークンでログイン状態を判定
+        // const isLoggedIn = localStorage.getItem("authToken") !== null;
         // return isLoggedIn ? "/posts" : "/login";
         return "/posts";
       },
@@ -75,7 +76,8 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = localStorage.getItem("token") !== null;
+  // Laravel Sanctum の認証トークンでログイン状態を判定
+  const isLoggedIn = localStorage.getItem("authToken") !== null;
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     return next("/login");

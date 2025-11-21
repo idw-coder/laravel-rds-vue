@@ -179,7 +179,7 @@ h3, p {
 }
 
 .ad-container {
-  margin-top: 2rem;
+  margin: 2rem 0;
   width: 100%;
   min-width: 300px;
   display: block;

@@ -12,7 +12,8 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const goHome = () => {
-  const isLoggedIn = localStorage.getItem("token") !== null
+  // Laravel Sanctum の認証トークンでログイン状態を判定
+  const isLoggedIn = localStorage.getItem("authToken") !== null
   router.push(isLoggedIn ? "/posts" : "/login")
 }
 </script>

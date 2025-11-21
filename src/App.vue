@@ -41,8 +41,9 @@ const router = useRouter();
  * computedでルート変更時に自動で再評価される？
  * localStorage の変更については再評価されない
  */
-// const isLoggedIn = computed(() => localStorage.getItem("token") !== null)
-const isLoggedIn = ref(localStorage.getItem("token") !== null);
+// Laravel Sanctum の認証トークンでログイン状態を判定
+// const isLoggedIn = computed(() => localStorage.getItem("authToken") !== null)
+const isLoggedIn = ref(localStorage.getItem("authToken") !== null);
 const userRoles = ref<{ name?: string; label?: string }[]>([]);
 
 // ユーザー情報からロールを取得
@@ -99,7 +100,8 @@ const canCreatePost = computed(() => {
 // ルート変更時にログイン状態とロール情報を再チェック
 router.afterEach(() => {
   const wasLoggedIn = isLoggedIn.value;
-  isLoggedIn.value = localStorage.getItem("token") !== null;
+  // Laravel Sanctum の認証トークンでログイン状態を判定
+  isLoggedIn.value = localStorage.getItem("authToken") !== null;
   
   // ログイン状態が変わった場合、またはログインしている場合はロール情報を更新
   if (wasLoggedIn !== isLoggedIn.value || isLoggedIn.value) {
@@ -120,7 +122,8 @@ const handleLogout = async () => {
     console.error("ログアウトエラー:", e);
   } finally {
     // 成功・失敗に関わらず、フロントエンドの情報を必ず消す
-    localStorage.removeItem("token");
+    // Laravel Sanctum の認証トークンを削除
+    localStorage.removeItem("authToken");
     localStorage.removeItem("user");
 
     // 状態を即座に更新（router.afterEachを待たずにUIを消すため）

@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
 
 export interface LoginPayload {
@@ -98,18 +100,12 @@ export const authApi = {
   },
 
   async logout(): Promise<void> {
-    const token = localStorage.getItem("token");
-
     try {
-    await fetch(`${API_BASE}/logout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-      localStorage.removeItem("token");
+      await fetchWithAuth(`${API_BASE}/logout`, {
+        method: "POST",
+      });
+      // Laravel Sanctum の認証トークンを削除
+      localStorage.removeItem("authToken");
     } catch (error) {
       console.error("Logout error:", error);
       throw new Error("ログアウトに失敗しました");

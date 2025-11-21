@@ -1,8 +1,9 @@
 export async function fetchWithAuth(
     url: string,
-    options: RequestInit = {}
+    options: RequestInit = {} // TODO: このオプション理解できていない
   ) {
-    const token = localStorage.getItem("token");
+    // Laravel Sanctum の認証トークンを取得
+    const token = localStorage.getItem("authToken");
   
     // HTTPリクエストのヘッダーを構築
     const headers = {
@@ -22,7 +23,8 @@ export async function fetchWithAuth(
     // 認証エラーなら強制ログアウトしてログイン画面へリダイレクト
     if (response.status === 401) {
       console.warn("Token expired or invalid. Logging out.");
-      localStorage.removeItem("token");
+      // Laravel Sanctum の認証トークンを削除
+      localStorage.removeItem("authToken");
       // API呼び出し後の401エラー時は、ログイン画面へ強制リダイレクト
       // （ルーターガードはページ遷移前の防御、こちらはAPI呼び出し後の防御）
       window.location.href = "/login";
