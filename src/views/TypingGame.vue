@@ -1,6 +1,8 @@
 <template>
   <div class="typing-game-container">
-    <h2 class="game-title">プログラミングタイピングゲーム</h2>
+    <h2 class="game-title">
+      プログラミングタイピングゲーム
+    </h2>
     
     <div class="typing-game">
       <!-- カテゴリー選択 -->
@@ -18,6 +20,7 @@
               getCategoryColorClass(key, selectedCategory === key)
             ]"
           >
+            <i :class="getCategoryIcon(key)"></i>
             {{ category.name }}
           </button>
         </template>
@@ -26,13 +29,22 @@
       <!-- スコアとタイマー -->
       <div class="game-stats">
         <div class="stats-left">
-          <span class="stats-label">Score</span>
+          <span class="stats-label">
+            <i class="fas fa-star"></i>
+            Score
+          </span>
           <span class="stats-value">{{ score }}</span>
-          <span class="stats-label">Miss</span>
+          <span class="stats-label">
+            <i class="fas fa-times-circle"></i>
+            Miss
+          </span>
           <span class="stats-value">{{ missCount }}</span>
         </div>
         <div class="stats-right">
-          <span class="timer-label">残り時間</span>
+          <span class="timer-label">
+            <i class="fas fa-clock"></i>
+            残り時間
+          </span>
           <span class="timer-value">{{ timeLeft }}</span>
         </div>
       </div>
@@ -55,7 +67,7 @@
             class="start-btn"
             :class="{ 'start-btn-disabled': selectedCategory === 'none' || !categories[selectedCategory]?.data.length }"
           >
-            <span class="btn-icon">▶</span>
+            <i class="fas fa-play"></i>
             ゲーム開始
           </button>
         </div>
@@ -92,7 +104,7 @@
             </div>
           </div>
           <button @click="() => resetGame()" class="retry-btn">
-            <span class="btn-icon">↻</span>
+            <i class="fas fa-redo"></i>
             もう一度プレイ
           </button>
         </div>
@@ -155,6 +167,17 @@ const getCategoryColorClass = (slug: string, isSelected: boolean): string => {
 
   // デフォルトの色
   return isSelected ? 'category-default-selected' : 'category-default'
+}
+
+// カテゴリーのアイコンを取得
+const getCategoryIcon = (slug: string): string => {
+  const iconMap: { [key: string]: string } = {
+    git: 'fab fa-git-alt',
+    docker: 'fab fa-docker',
+    javascript: 'fab fa-js',
+  }
+
+  return iconMap[slug] || 'fas fa-code'
 }
 
 // カテゴリーとコマンドを読み込む
@@ -337,6 +360,13 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: bold;
   margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.game-title i {
+  color: #35495e;
 }
 
 .typing-game {
@@ -369,6 +399,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.category-btn i {
+  font-size: 0.875rem;
 }
 
 .category-btn:hover {
@@ -376,33 +412,39 @@ onMounted(() => {
 }
 
 .category-git {
-  background-color: white;
+  background-color: #f0f0f0;
   color: #35495e;
+  border-color: #ddd;
 }
 
 .category-git-selected {
-  background-color: rgba(53, 73, 94, 0.1);
+  background-color: rgba(53, 73, 94, 0.2);
   color: #35495e;
+  border-color: #35495e;
 }
 
 .category-docker {
-  background-color: white;
+  background-color: #f0f0f0;
   color: #35495e;
+  border-color: #ddd;
 }
 
 .category-docker-selected {
-  background-color: rgba(53, 73, 94, 0.1);
+  background-color: rgba(53, 73, 94, 0.2);
   color: #35495e;
+  border-color: #35495e;
 }
 
 .category-javascript {
-  background-color: white;
+  background-color: #f0f0f0;
   color: #35495e;
+  border-color: #ddd;
 }
 
 .category-javascript-selected {
-  background-color: rgba(53, 73, 94, 0.1);
+  background-color: rgba(53, 73, 94, 0.2);
   color: #35495e;
+  border-color: #35495e;
 }
 
 .category-default {
@@ -428,11 +470,20 @@ onMounted(() => {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  line-height: 1;
 }
 
 .stats-label {
   font-size: 0.8rem;
   color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stats-label i {
+  font-size: 0.75rem;
+  color: #999;
 }
 
 .stats-value {
@@ -444,11 +495,20 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  line-height: 1;
 }
 
 .timer-label {
   font-size: 0.8rem;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.timer-label i {
+  font-size: 0.75rem;
+  color: #666;
 }
 
 .timer-value {
@@ -492,6 +552,11 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
+  border-radius: 0.25rem;
+}
+
+.start-btn i {
+  font-size: 0.75rem;
 }
 
 .start-btn:hover:not(.start-btn-disabled) {
@@ -600,12 +665,12 @@ onMounted(() => {
   font-size: 0.8rem;
 }
 
-.retry-btn:hover {
-  background-color: #f0f0f0;
+.retry-btn i {
+  font-size: 0.75rem;
 }
 
-.btn-icon {
-  font-size: 0.8rem;
+.retry-btn:hover {
+  background-color: #f0f0f0;
 }
 
 @media (max-width: 768px) {
