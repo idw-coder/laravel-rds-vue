@@ -596,6 +596,7 @@ onMounted(() => {
   background-color: white;
   outline: none;
   box-sizing: border-box;
+  border-radius: 0.25rem;
 }
 
 .input-area:focus {
@@ -607,7 +608,15 @@ onMounted(() => {
   border-color: #e74c3c;
 }
 
+.input-area-miss:focus {
+  border-color: #e74c3c;
+}
+
 .input-area-correct {
+  border-color: #27ae60;
+}
+
+.input-area-correct:focus {
   border-color: #27ae60;
 }
 
@@ -663,6 +672,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
+  border-radius: 0.25rem;
 }
 
 .retry-btn i {
