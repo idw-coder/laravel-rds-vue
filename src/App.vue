@@ -35,7 +35,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { authApi } from "./api/auth";
-import { userApi, type User } from "./api/user";
+import { userApi, type User, type Role } from "./api/user";
 
 const router = useRouter();
 /**
@@ -45,15 +45,31 @@ const router = useRouter();
 // Laravel Sanctum の認証トークンでログイン状態を判定
 // const isLoggedIn = computed(() => localStorage.getItem("authToken") !== null)
 const isLoggedIn = ref(localStorage.getItem("authToken") !== null);
-const userRoles = ref<{ name?: string; label?: string }[]>([]);
+const userRoles = ref<Role[]>([]);
+
+// ロールを正規化（文字列配列をオブジェクト配列に変換）
+const normalizeRoles = (roles: any): Role[] => {
+  if (!roles || !Array.isArray(roles)) return [];
+  
+  // 文字列配列の場合
+  if (typeof roles[0] === 'string') {
+    return roles.map((roleName: string) => ({
+      name: roleName,
+      label: roleName,
+    }));
+  }
+  
+  // オブジェクト配列の場合
+  return roles as Role[];
+};
 
 // ユーザー情報からロールを取得
-const getUserRoles = (): { name?: string; label?: string }[] => {
+const getUserRoles = (): Role[] => {
   try {
     const userStr = localStorage.getItem("user");
     if (!userStr) return [];
-    const user: User = JSON.parse(userStr);
-    return user.roles || [];
+    const user: any = JSON.parse(userStr);
+    return normalizeRoles(user.roles);
   } catch {
     return [];
   }
@@ -73,12 +89,13 @@ const updateUserRoles = async () => {
   if (roles.length === 0) {
     try {
       const user = await userApi.getProfile();
-      userRoles.value = user.roles || [];
+      const normalizedRoles = normalizeRoles(user.roles);
+      userRoles.value = normalizedRoles;
       // localStorageのユーザー情報を更新
       const userStr = localStorage.getItem("user");
       if (userStr) {
-        const currentUser: User = JSON.parse(userStr);
-        currentUser.roles = user.roles;
+        const currentUser: any = JSON.parse(userStr);
+        currentUser.roles = normalizedRoles;
         localStorage.setItem("user", JSON.stringify(currentUser));
       }
     } catch (error) {
