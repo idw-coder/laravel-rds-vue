@@ -62,7 +62,7 @@ const handleLogin = async () => {
     });
 
     // Laravel Sanctum の認証トークンを保存
-    localStorage.setItem("authToken", res.token);
+    localStorage.setItem("authToken", res.authToken);
     
     // ユーザー情報を保存
     localStorage.setItem("user", JSON.stringify(res.user));
@@ -112,9 +112,9 @@ const handleGoogleLogin = async () => {
 const handleGoogleCallback = (event: MessageEvent) => {
   if (event.origin !== window.location.origin) return;
 
-  if (event.data.token) {
+  if (event.data.authToken) {
     // Laravel Sanctum の認証トークンを保存
-    localStorage.setItem("authToken", event.data.token);
+    localStorage.setItem("authToken", event.data.authToken);
     
     // ユーザー情報を保存
     localStorage.setItem("user", JSON.stringify(event.data.user));

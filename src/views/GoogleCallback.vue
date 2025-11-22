@@ -30,7 +30,7 @@
       if (window.opener) {
         window.opener.postMessage(
           {
-            token: data.token,
+            authToken: data.authToken,
             user: data.user,
           },
           window.location.origin
