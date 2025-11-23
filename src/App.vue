@@ -6,9 +6,15 @@
           <h1>Laravel API + Vue 3</h1>
         </router-link>
         <nav class="nav-container">
-          <router-link class="nav-link" to="/posts">投稿一覧</router-link>
-          <router-link class="nav-link" to="/typing-game">タイピングゲーム</router-link>
-          <router-link v-if="canCreatePost" class="nav-link" to="/posts/create">新規作成</router-link>
+          <div class="nav-links">
+            <router-link class="nav-link" to="/posts">投稿一覧</router-link>
+            <router-link class="nav-link" to="/typing-game">タイピングゲーム</router-link>
+            <router-link v-if="canCreatePost" class="nav-link" to="/posts/create">新規作成</router-link>
+          </div>
+
+          <button class="hamburger-btn" @click="toggleMenu" aria-label="メニュー">
+            <i class="fas fa-bars"></i>
+          </button>
 
           <div class="user-menu">
             <div class="user-icon">
@@ -26,6 +32,17 @@
               <router-link v-if="!isLoggedIn" class="dropdown-item" to="/register">新規登録</router-link>
               <button v-if="isLoggedIn" @click="handleLogout" class="dropdown-item logout-item">ログアウト</button>
             </div>
+          </div>
+
+          <!-- モバイルメニュー -->
+          <div v-if="isMenuOpen" class="mobile-menu">
+            <router-link class="mobile-menu-item" to="/posts" @click="closeMenu">投稿一覧</router-link>
+            <router-link class="mobile-menu-item" to="/typing-game" @click="closeMenu">タイピングゲーム</router-link>
+            <router-link v-if="canCreatePost" class="mobile-menu-item" to="/posts/create" @click="closeMenu">新規作成</router-link>
+            <router-link v-if="isLoggedIn" class="mobile-menu-item" to="/profile" @click="closeMenu">プロフィール</router-link>
+            <router-link v-if="!isLoggedIn" class="mobile-menu-item" to="/login" @click="closeMenu">ログイン</router-link>
+            <router-link v-if="!isLoggedIn" class="mobile-menu-item" to="/register" @click="closeMenu">新規登録</router-link>
+            <button v-if="isLoggedIn" @click="handleLogoutMobile" class="mobile-menu-item logout-item">ログアウト</button>
           </div>
         </nav>
       </div>
@@ -53,6 +70,15 @@ const router = useRouter();
 const isLoggedIn = ref(localStorage.getItem("authToken") !== null);
 const userRoles = ref<Role[]>([]);
 const userAvatar = ref<string>('');
+const isMenuOpen = ref(false);
+
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
+
+const closeMenu = () => {
+  isMenuOpen.value = false;
+};
 
 // ユーザーアバターを取得
 const getUserAvatar = (): string => {
@@ -197,9 +223,14 @@ const handleLogout = async () => {
     // 状態を即座に更新（router.afterEachを待たずにUIを消すため）
     isLoggedIn.value = false;
     userAvatar.value = '';
+    isMenuOpen.value = false;
 
     router.push("/login");
   }
+};
+
+const handleLogoutMobile = async () => {
+  await handleLogout();
 };
 </script>
 
@@ -242,11 +273,81 @@ header {
   display: flex;
   gap: 1rem;
   align-items: center;
+  position: relative;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
 .nav-link {
   color: #35495e;
   text-decoration: none;
+}
+
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #35495e;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.mobile-menu {
+  display: flex;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  min-width: 200px;
+  margin-top: 0.5rem;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.mobile-menu-item {
+  padding: 0.75rem 1rem;
+  color: #35495e;
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #eee;
+}
+
+.mobile-menu-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-menu-item:hover {
+  background-color: #f9f9f9;
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+
+  .mobile-menu {
+    display: flex;
+  }
+
+  .user-menu {
+    display: none;
+  }
 }
 
 .user-menu {
@@ -264,8 +365,8 @@ header {
 }
 
 .user-avatar-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   object-fit: cover;
 }
