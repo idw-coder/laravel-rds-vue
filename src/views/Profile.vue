@@ -140,12 +140,38 @@ const handleFileChange = (event: Event) => {
     return
   }
   
-  // 画像をBase64に変換
+  // 画像を圧縮してBase64に変換
   const reader = new FileReader()
   reader.onload = (e) => {
-    const result = e.target?.result as string
-    avatarPreview.value = result
-    form.avatar = result
+    const img = new Image()
+    img.onload = () => {
+      // Canvasで圧縮
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      
+      // 最大サイズを200x200に制限
+      const MAX_SIZE = 200
+      let width = img.width
+      let height = img.height
+      
+      if (width > height && width > MAX_SIZE) {
+        height = (height * MAX_SIZE) / width
+        width = MAX_SIZE
+      } else if (height > MAX_SIZE) {
+        width = (width * MAX_SIZE) / height
+        height = MAX_SIZE
+      }
+      
+      canvas.width = width
+      canvas.height = height
+      ctx.drawImage(img, 0, 0, width, height)
+      
+      // 圧縮率0.7でBase64に変換
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7)
+      avatarPreview.value = compressedBase64
+      form.avatar = compressedBase64
+    }
+    img.src = e.target?.result as string
   }
   reader.readAsDataURL(file)
 }
