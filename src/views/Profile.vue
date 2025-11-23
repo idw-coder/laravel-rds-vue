@@ -149,8 +149,8 @@ const handleFileChange = (event: Event) => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')!
       
-      // 最大サイズを200x200に制限
-      const MAX_SIZE = 200
+      // 最大サイズを900x900に制限
+      const MAX_SIZE = 900
       let width = img.width
       let height = img.height
       
