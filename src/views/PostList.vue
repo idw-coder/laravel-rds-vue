@@ -18,6 +18,7 @@
                 :src="`data:image/png;base64,${post.user.avatar}`" 
                 :alt="post.user?.name || 'ユーザー'"
                 class="user-avatar"
+                loading="lazy"
               />
               <i v-else class="fas fa-user"></i>
               {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}
@@ -31,7 +32,8 @@
         </div>
       </li>
     </ul>
-    <p v-else>投稿がありません</p>
+    <p v-else-if="!isLoading">投稿がありません</p>
+    <p v-else>読み込み中...</p>
 
     <!-- ページネーション -->
     <div v-if="totalPages > 1" class="pagination">
@@ -67,6 +69,7 @@ import GoogleAdsense from '@/components/GoogleAdsense.vue'
 
 const router = useRouter()
 const posts = ref<Post[]>([])
+const isLoading = ref(true)
 const currentPage = ref(1)
 const itemsPerPage = 10 // 1ページあたりの表示件数
 
@@ -93,9 +96,14 @@ const formatDate = (date: string | undefined) => {
 
 // 初期データ取得
 onMounted(async () => {
-  posts.value = await postsApi.getAll()
-  // デバッグ用: isLocalhost の値を確認
-  console.log('isLocalhost:', isLocalhost.value, 'hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A')
+  try {
+    isLoading.value = true
+    posts.value = await postsApi.getAll()
+    // デバッグ用: isLocalhost の値を確認
+    console.log('isLocalhost:', isLocalhost.value, 'hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A')
+  } finally {
+    isLoading.value = false
+  }
 })
 
 // 詳細ページへ（追加）

@@ -19,6 +19,7 @@
                 :src="`data:image/png;base64,${post.user.avatar}`" 
                 :alt="post.user?.name || 'ユーザー'"
                 class="user-avatar"
+                loading="lazy"
               />
               <i v-else class="fas fa-user"></i>
               {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}
