@@ -12,7 +12,13 @@
 
           <div class="user-menu">
             <div class="user-icon">
-              <i class="fas fa-user-circle"></i>
+              <img 
+                v-if="userAvatar" 
+                :src="userAvatar" 
+                alt="User Avatar"
+                class="user-avatar-icon"
+              />
+              <i v-else class="fas fa-user-circle"></i>
             </div>
             <div class="dropdown-menu">
               <router-link v-if="isLoggedIn" class="dropdown-item" to="/profile">プロフィール</router-link>
@@ -46,6 +52,48 @@ const router = useRouter();
 // const isLoggedIn = computed(() => localStorage.getItem("authToken") !== null)
 const isLoggedIn = ref(localStorage.getItem("authToken") !== null);
 const userRoles = ref<Role[]>([]);
+const userAvatar = ref<string>('');
+
+// ユーザーアバターを取得
+const getUserAvatar = (): string => {
+  try {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return '';
+    const user: any = JSON.parse(userStr);
+    if (user?.avatar) {
+      return `data:image/png;base64,${user.avatar}`;
+    }
+    return '';
+  } catch {
+    return '';
+  }
+};
+
+// アバター情報を更新
+const updateUserAvatar = () => {
+  if (isLoggedIn.value) {
+    userAvatar.value = getUserAvatar();
+    // アバターがない場合はプロフィールAPIから取得
+    if (!userAvatar.value) {
+      userApi.getProfile().then((user) => {
+        if (user.avatar) {
+          userAvatar.value = `data:image/png;base64,${user.avatar}`;
+          // localStorageのユーザー情報を更新
+          const userStr = localStorage.getItem("user");
+          if (userStr) {
+            const currentUser: any = JSON.parse(userStr);
+            currentUser.avatar = user.avatar;
+            localStorage.setItem("user", JSON.stringify(currentUser));
+          }
+        }
+      }).catch(() => {
+        // エラーは無視
+      });
+    }
+  } else {
+    userAvatar.value = '';
+  }
+};
 
 // ロールを正規化（文字列配列をオブジェクト配列に変換）
 const normalizeRoles = (roles: any): Role[] => {
@@ -124,12 +172,14 @@ router.afterEach(() => {
   // ログイン状態が変わった場合、またはログインしている場合はロール情報を更新
   if (wasLoggedIn !== isLoggedIn.value || isLoggedIn.value) {
     updateUserRoles();
+    updateUserAvatar();
   }
 });
 
 // 初回マウント時にロール情報を取得
 onMounted(() => {
   updateUserRoles();
+  updateUserAvatar();
 });
 
 const handleLogout = async () => {
@@ -146,6 +196,7 @@ const handleLogout = async () => {
 
     // 状態を即座に更新（router.afterEachを待たずにUIを消すため）
     isLoggedIn.value = false;
+    userAvatar.value = '';
 
     router.push("/login");
   }
@@ -207,6 +258,16 @@ header {
   cursor: pointer;
   padding: 0.25rem;
   color: #35495e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .dropdown-menu {

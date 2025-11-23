@@ -12,7 +12,16 @@
 
         <div class="post-meta">
           <div class="post-meta-left">
-            <span><i class="fas fa-user"></i> {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}</span>
+            <span class="user-info">
+              <img 
+                v-if="post.user?.avatar" 
+                :src="`data:image/png;base64,${post.user.avatar}`" 
+                :alt="post.user?.name || 'ユーザー'"
+                class="user-avatar"
+              />
+              <i v-else class="fas fa-user"></i>
+              {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}
+            </span>
             <span class="status-label">{{ post.status }}</span>
           </div>
           <div class="post-meta-right">
@@ -169,6 +178,19 @@ h3, p {
 
 .post-meta i {
   color: #999;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .status-label {

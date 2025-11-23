@@ -5,6 +5,42 @@
     <div v-if="isLoading">読み込み中...</div>
 
     <form v-else @submit.prevent="handleSubmit" class="profile-form">
+      <!-- アバター画像のプレビューとアップロード -->
+      <div class="form-group">
+        <label>プロフィール画像</label>
+        <div class="avatar-section">
+          <div class="avatar-preview">
+            <img
+              v-if="avatarPreview"
+              :src="avatarPreview"
+              alt="Avatar Preview"
+              class="avatar-image"
+            />
+            <div v-else class="avatar-placeholder">画像未設定</div>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            @change="handleFileChange"
+            ref="fileInput"
+            class="file-input"
+          />
+          <div class="avatar-buttons">
+            <button type="button" @click="selectFile" class="select-file-btn">
+              画像を選択
+            </button>
+            <button 
+              v-if="avatarPreview" 
+              type="button" 
+              @click="handleDeleteAvatar" 
+              class="delete-avatar-btn"
+            >
+              画像を削除
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>名前</label>
         <input v-model="form.name" type="text" required />
@@ -58,12 +94,15 @@ const isSaving = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const roles = ref<Role[]>([])
+const avatarPreview = ref<string>('')
+const fileInput = ref<HTMLInputElement>()
 
 const form = reactive<UpdateProfileData>({
   name: '',
   email: '',
   password: '',
   password_confirmation: '',
+  avatar: '',
 })
 
 onMounted(async () => {
@@ -73,12 +112,74 @@ onMounted(async () => {
     form.name = user.name
     form.email = user.email
     roles.value = user.roles || []
+    
+    // 既存のアバターがあれば表示
+    if (user.avatar) {
+      avatarPreview.value = `data:image/png;base64,${user.avatar}`
+    }
   } catch (error) {
     errorMessage.value = 'プロフィールの取得に失敗しました'
   } finally {
     isLoading.value = false
   }
 })
+
+const selectFile = () => {
+  fileInput.value?.click()
+}
+
+const handleFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  // ファイルサイズチェック（2MB以下）
+  if (file.size > 2 * 1024 * 1024) {
+    errorMessage.value = '画像サイズは2MB以下にしてください'
+    return
+  }
+  
+  // 画像をBase64に変換
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const result = e.target?.result as string
+    avatarPreview.value = result
+    form.avatar = result
+  }
+  reader.readAsDataURL(file)
+}
+
+const handleDeleteAvatar = async () => {
+  try {
+    errorMessage.value = ''
+    successMessage.value = ''
+    isSaving.value = true
+
+    // アバターをnullに設定して削除
+    const data: UpdateProfileData = {
+      name: form.name,
+      email: form.email,
+      avatar: null,
+    }
+
+    const response = await userApi.updateProfile(data)
+    successMessage.value = response.message || 'アバター画像を削除しました'
+
+    // プレビューとフォームをクリア
+    avatarPreview.value = ''
+    form.avatar = ''
+    
+    // ファイル入力もリセット
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+  } catch (error: any) {
+    errorMessage.value = error.message || 'アバター画像の削除に失敗しました'
+  } finally {
+    isSaving.value = false
+  }
+}
 
 const handleSubmit = async () => {
   try {
@@ -95,6 +196,11 @@ const handleSubmit = async () => {
     if (form.password) {
       data.password = form.password
       data.password_confirmation = form.password_confirmation
+    }
+
+    // アバターが変更されている場合
+    if (form.avatar) {
+      data.avatar = form.avatar
     }
 
     const response = await userApi.updateProfile(data)
@@ -149,6 +255,69 @@ input {
   box-sizing: border-box;
 }
 
+/* アバター関連のスタイル */
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.avatar-preview {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  color: #999;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.file-input {
+  display: none;
+}
+
+button[type="button"].select-file-btn {
+  background-color: transparent;
+  color: #41B883;
+  border: 1px solid #41B883;
+}
+
+button[type="button"].select-file-btn:hover {
+  background-color: rgba(65, 184, 131, 0.1);
+  opacity: 1;
+}
+
+button[type="button"].delete-avatar-btn {
+  background-color: transparent;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+button[type="button"].delete-avatar-btn:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+  opacity: 1;
+}
+
 .role-label {
   background-color: #f0f0f0;
   padding: 0.25rem 0.5rem;
@@ -173,7 +342,8 @@ input {
 }
 
 button {
-  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.8rem;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;

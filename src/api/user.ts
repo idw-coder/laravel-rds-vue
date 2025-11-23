@@ -11,6 +11,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  avatar?: string | null;
   google_id?: string | null;
   roles?: Role[];
   created_at?: string;
@@ -20,6 +21,7 @@ export interface User {
 export interface UpdateProfileData {
   name: string;
   email: string;
+  avatar?: string | null;
   password?: string;
   password_confirmation?: string;
 }

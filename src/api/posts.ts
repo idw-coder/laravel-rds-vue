@@ -14,6 +14,7 @@ export interface Post {
   user?: {
     id?: number;
     name?: string;
+    avatar?: string | null;
   };
 }
 
