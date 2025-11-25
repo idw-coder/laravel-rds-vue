@@ -211,7 +211,7 @@ const handleSubmit = async () => {
       const response = await userApi.updateProfileWithFormData(formData)
       successMessage.value = response.message
     } else {
-      // ファイルが選択されていない場合は通常のJSON送信
+      // ファイルが選択されていない場合は通常のJSON送信 TODO: まとめたい
       const data: UpdateProfileData = {
         name: form.name,
         email: form.email,

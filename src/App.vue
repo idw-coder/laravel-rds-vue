@@ -385,6 +385,7 @@ header {
   display: none;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1;
 }
 
 .user-menu:hover .dropdown-menu,
