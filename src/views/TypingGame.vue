@@ -39,6 +39,13 @@
             Miss
           </span>
           <span class="stats-value">{{ missCount }}</span>
+          <template v-if="gameStatus === 'playing' && combo > 1">
+            <span class="combo-label">
+              <i class="fas fa-fire"></i>
+              Combo
+            </span>
+            <span class="combo-value">{{ combo }}</span>
+          </template>
         </div>
         <div class="stats-right">
           <span class="timer-label">
@@ -75,19 +82,42 @@
         <!-- プレイ中画面 -->
         <div v-if="gameStatus === 'playing'" class="playing-screen">
           <div class="description">{{ currentDescription }}</div>
+          
           <div
             v-if="currentWord"
-            class="input-area"
+            class="input-area-wrapper"
             :class="{
               'input-area-miss': inputStatus === 'miss',
               'input-area-correct': inputStatus === 'correct'
             }"
-            tabindex="0"
-            @keydown="handleKeyDown"
-            ref="inputRef"
           >
-            <span class="typed-text">{{ typed }}</span>
-            <span class="remaining-text">{{ currentCommand.slice(typed.length) }}</span>
+            <div
+              class="input-area"
+              tabindex="0"
+              @keydown="handleKeyDown"
+              ref="inputRef"
+            >
+              <span 
+                v-for="(char, index) in currentCommand.split('')" 
+                :key="index"
+                class="char"
+                :class="{
+                  'char-typed': index < typed.length,
+                  'char-current': index === typed.length,
+                  'char-remaining': index > typed.length,
+                  'char-space': char === ' '
+                }"
+              >{{ char === ' ' ? '\u00A0' : char }}</span>
+            </div>
+            
+            <!-- 単語制限時間バー -->
+            <div class="word-timer-bar">
+              <div 
+                class="word-timer-progress" 
+                :style="{ transform: `scaleX(${wordTimePercent / 100})` }"
+                :class="{ 'word-timer-warning': wordTimePercent < 30 }"
+              ></div>
+            </div>
           </div>
         </div>
 
@@ -101,6 +131,10 @@
             <div class="end-stat-item">
               <span class="end-stat-label">Miss</span>
               <span class="end-stat-value">{{ missCount }}</span>
+            </div>
+            <div class="end-stat-item">
+              <span class="end-stat-label">Max Combo</span>
+              <span class="end-stat-value">{{ maxCombo }}</span>
             </div>
           </div>
           <button @click="() => resetGame()" class="retry-btn">
@@ -126,7 +160,8 @@ import GoogleAdsense from '@/components/GoogleAdsense.vue'
 type GameStatus = 'ready' | 'playing' | 'end'
 type InputStatus = 'normal' | 'miss' | 'correct'
 
-const defaultTime = 120
+const DEFAULT_GAME_TIME = 120
+const WORD_TIME_LIMIT = 10
 
 // 状態管理
 const categories = ref<{ [key: string]: CategoryData }>({
@@ -138,11 +173,16 @@ const shuffledList = ref<WordEntry[]>([])
 const currentWordIndex = ref(0)
 const typed = ref('')
 const inputStatus = ref<InputStatus>('normal')
-const timeLeft = ref(defaultTime)
+const timeLeft = ref(DEFAULT_GAME_TIME)
 const score = ref(0)
 const missCount = ref(0)
+const combo = ref(0)
+const maxCombo = ref(0)
+const wordTimeLeft = ref(WORD_TIME_LIMIT)
+
 const inputRef = ref<HTMLElement | null>(null)
-let timerInterval: number | null = null
+let gameTimerInterval: number | null = null
+let wordTimerInterval: number | null = null
 
 const isLocalhost = computed(() => {
   return typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -152,6 +192,7 @@ const isLocalhost = computed(() => {
 const currentWord = computed(() => shuffledList.value[currentWordIndex.value])
 const currentCommand = computed(() => currentWord.value?.command || '')
 const currentDescription = computed(() => currentWord.value?.description || '')
+const wordTimePercent = computed(() => (wordTimeLeft.value / WORD_TIME_LIMIT) * 100)
 
 // カテゴリーの色を取得
 const getCategoryColorClass = (slug: string, isSelected: boolean): string => {
@@ -161,12 +202,10 @@ const getCategoryColorClass = (slug: string, isSelected: boolean): string => {
     javascript: { normal: 'category-javascript', selected: 'category-javascript-selected' },
     laravel: { normal: 'category-laravel', selected: 'category-laravel-selected' },
   }
-
-  if (colorMap[slug]) {
-    return isSelected ? colorMap[slug].selected : colorMap[slug].normal
+  const colors = colorMap[slug]
+  if (colors) {
+    return isSelected ? colors.selected : colors.normal
   }
-
-  // デフォルトの色
   return isSelected ? 'category-default-selected' : 'category-default'
 }
 
@@ -178,7 +217,6 @@ const getCategoryIcon = (slug: string): string => {
     javascript: 'fab fa-js',
     laravel: 'fab fa-laravel',
   }
-
   return iconMap[slug] || 'fas fa-code'
 }
 
@@ -213,61 +251,88 @@ const loadCategories = async () => {
 }
 
 // Fisher-Yatesアルゴリズムでシャッフル
-const shuffleList = (list: WordEntry[]): WordEntry[] => {
-  const array = [...list]
-  for (let i = array.length - 1; i > 0; i--) {
+const shuffleArray = <T>(array: T[]): T[] => {
+  const result = [...array]
+  for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    const temp = array[i]!
-    array[i] = array[j]!
-    array[j] = temp
+    ;[result[i], result[j]] = [result[j]!, result[i]!]
   }
-  return array
+  return result
+}
+
+// 単語タイマーをリセット
+const resetWordTimer = () => {
+  wordTimeLeft.value = WORD_TIME_LIMIT
+}
+
+// 次の単語へ
+const goToNextWord = () => {
+  currentWordIndex.value += 1
+  typed.value = ''
+  resetWordTimer()
+
+  if (currentWordIndex.value === shuffledList.value.length) {
+    const categoryData = categories.value[selectedCategory.value]
+    if (categoryData) {
+      shuffledList.value = [...shuffledList.value, ...shuffleArray(categoryData.data)]
+    }
+  }
 }
 
 // カテゴリー選択
 const selectCategory = (categorySlug: string) => {
   selectedCategory.value = categorySlug
   resetGame('ready', categorySlug)
-  if (categorySlug !== 'none' && categories.value[categorySlug]?.data) {
-    const selectedCategoryList = categories.value[categorySlug].data
-    const shuffled = shuffleList(selectedCategoryList)
-    shuffledList.value = shuffled
+  const categoryData = categories.value[categorySlug]
+  if (categorySlug !== 'none' && categoryData?.data) {
+    shuffledList.value = shuffleArray(categoryData.data)
   }
 }
 
 // ゲーム開始
 const startGame = () => {
-  if (selectedCategory.value === 'none' || !categories.value[selectedCategory.value]?.data.length) {
+  const categoryData = categories.value[selectedCategory.value]
+  if (selectedCategory.value === 'none' || !categoryData?.data.length) {
     return
   }
   if (shuffledList.value.length === 0) {
-    const categoryData = categories.value[selectedCategory.value]
-    if (categoryData) {
-      const selectedCategoryList = categoryData.data
-      const shuffled = shuffleList(selectedCategoryList)
-      shuffledList.value = shuffled
-    }
+    shuffledList.value = shuffleArray(categoryData.data)
   }
   gameStatus.value = 'playing'
+  resetWordTimer()
   nextTick(() => {
     inputRef.value?.focus()
   })
 }
 
+// タイマーをクリア
+const clearTimers = () => {
+  if (gameTimerInterval !== null) {
+    clearInterval(gameTimerInterval)
+    gameTimerInterval = null
+  }
+  if (wordTimerInterval !== null) {
+    clearInterval(wordTimerInterval)
+    wordTimerInterval = null
+  }
+}
+
 // ゲームリセット
 const resetGame = (status: GameStatus = 'ready', category: string = 'none') => {
+  clearTimers()
   gameStatus.value = status
   currentWordIndex.value = 0
+  typed.value = ''
+  timeLeft.value = DEFAULT_GAME_TIME
+  wordTimeLeft.value = WORD_TIME_LIMIT
+  
   if (status === 'ready') {
     shuffledList.value = []
-    typed.value = ''
-    timeLeft.value = defaultTime
     score.value = 0
     missCount.value = 0
+    combo.value = 0
+    maxCombo.value = 0
     selectedCategory.value = category
-  } else {
-    typed.value = ''
-    timeLeft.value = defaultTime
   }
 }
 
@@ -282,72 +347,56 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
   const expectedChar = currentCommand.value[typed.value.length]
   if (e.key === expectedChar) {
-    const newTyped = typed.value + e.key
-    typed.value = newTyped
+    typed.value += e.key
     score.value += 1
+    combo.value += 1
+    maxCombo.value = Math.max(maxCombo.value, combo.value)
 
-    // 単語完成時
-    if (newTyped.length === currentCommand.value.length) {
-      currentWordIndex.value += 1
-      typed.value = ''
-      score.value += 5
+    if (typed.value.length === currentCommand.value.length) {
+      score.value += 5 + Math.floor(combo.value / 5)
       inputStatus.value = 'correct'
       setTimeout(() => {
         inputStatus.value = 'normal'
-      }, 500)
-
-      // リストが終わったら再シャッフルして追加
-      if (currentWordIndex.value === shuffledList.value.length) {
-        const categoryData = categories.value[selectedCategory.value]
-        if (categoryData) {
-          const selectedCategoryList = categoryData.data
-          const newShuffledList = shuffleList(selectedCategoryList)
-          shuffledList.value = [...shuffledList.value, ...newShuffledList]
-        }
-      }
+      }, 300)
+      goToNextWord()
     }
   } else {
-    // ミスタイピング
     score.value = Math.max(score.value - 2, 0)
     missCount.value += 1
+    combo.value = 0
     inputStatus.value = 'miss'
     setTimeout(() => {
       inputStatus.value = 'normal'
-    }, 500)
+    }, 300)
   }
 }
 
-// タイマー
+// ゲームタイマー
 watch(gameStatus, (newStatus) => {
-  // 既存のタイマーをクリア
-  if (timerInterval !== null) {
-    clearInterval(timerInterval)
-    timerInterval = null
-  }
+  clearTimers()
 
   if (newStatus === 'playing') {
-    timerInterval = window.setInterval(() => {
+    gameTimerInterval = window.setInterval(() => {
       timeLeft.value -= 1
       if (timeLeft.value <= 0) {
-        if (timerInterval !== null) {
-          clearInterval(timerInterval)
-          timerInterval = null
-        }
         resetGame('end')
       }
     }, 1000)
+
+    wordTimerInterval = window.setInterval(() => {
+      wordTimeLeft.value -= 0.1
+      if (wordTimeLeft.value <= 0) {
+        combo.value = 0
+        goToNextWord()
+      }
+    }, 100)
   }
 })
 
-// コンポーネントがアンマウントされる際にタイマーをクリア
 onUnmounted(() => {
-  if (timerInterval !== null) {
-    clearInterval(timerInterval)
-    timerInterval = null
-  }
+  clearTimers()
 })
 
-// 初期化
 onMounted(() => {
   loadCategories()
 })
@@ -367,10 +416,6 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-.game-title i {
-  color: #35495e;
-}
-
 .typing-game {
   min-height: 60vh;
   border: 1px solid #ddd;
@@ -378,6 +423,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background-color: #fff;
+  border-radius: 0.25rem;
 }
 
 .category-grid {
@@ -413,46 +459,21 @@ onMounted(() => {
   background-color: rgba(53, 73, 94, 0.1);
 }
 
-.category-git {
-  background-color: #f0f0f0;
-  color: #35495e;
-  border-color: #ddd;
-}
-
-.category-git-selected {
-  background-color: rgba(53, 73, 94, 0.2);
-  color: #35495e;
-  border-color: #35495e;
-}
-
-.category-docker {
-  background-color: #f0f0f0;
-  color: #35495e;
-  border-color: #ddd;
-}
-
-.category-docker-selected {
-  background-color: rgba(53, 73, 94, 0.2);
-  color: #35495e;
-  border-color: #35495e;
-}
-
-.category-javascript {
-  background-color: #f0f0f0;
-  color: #35495e;
-  border-color: #ddd;
-}
-
-.category-javascript-selected {
-  background-color: rgba(53, 73, 94, 0.2);
-  color: #35495e;
-  border-color: #35495e;
-}
-
+.category-git,
+.category-docker,
+.category-javascript,
 .category-laravel {
   background-color: #f0f0f0;
   color: #35495e;
   border-color: #ddd;
+}
+
+.category-git-selected,
+.category-docker-selected,
+.category-javascript-selected {
+  background-color: rgba(53, 73, 94, 0.2);
+  color: #35495e;
+  border-color: #35495e;
 }
 
 .category-laravel-selected {
@@ -487,7 +508,8 @@ onMounted(() => {
   line-height: 1;
 }
 
-.stats-label {
+.stats-label,
+.combo-label {
   font-size: 0.8rem;
   color: #666;
   display: flex;
@@ -495,14 +517,28 @@ onMounted(() => {
   gap: 0.25rem;
 }
 
-.stats-label i {
+.stats-label i,
+.combo-label i {
   font-size: 0.75rem;
   color: #999;
 }
 
-.stats-value {
+.combo-label {
+  color: #e67e22;
+}
+
+.combo-label i {
+  color: #e67e22;
+}
+
+.stats-value,
+.combo-value {
   font-weight: bold;
   font-size: 1rem;
+}
+
+.combo-value {
+  color: #e67e22;
 }
 
 .stats-right {
@@ -537,7 +573,8 @@ onMounted(() => {
   justify-content: center;
 }
 
-.ready-screen {
+.ready-screen,
+.end-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -554,7 +591,8 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.start-btn {
+.start-btn,
+.retry-btn {
   font-weight: bold;
   color: #35495e;
   background-color: white;
@@ -569,11 +607,13 @@ onMounted(() => {
   border-radius: 0.25rem;
 }
 
-.start-btn i {
+.start-btn i,
+.retry-btn i {
   font-size: 0.75rem;
 }
 
-.start-btn:hover:not(.start-btn-disabled) {
+.start-btn:hover:not(.start-btn-disabled),
+.retry-btn:hover {
   background-color: #f0f0f0;
 }
 
@@ -598,11 +638,29 @@ onMounted(() => {
   align-items: flex-end;
 }
 
+.input-area-wrapper {
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.input-area-wrapper:focus-within {
+  border-color: #35495e;
+}
+
+.input-area-wrapper.input-area-miss {
+  border-color: #e74c3c;
+}
+
+.input-area-wrapper.input-area-correct {
+  border-color: #27ae60;
+}
+
 .input-area {
   font-family: monospace;
   font-size: 1rem;
   padding: 1rem;
-  border: 1px solid #ddd;
   width: 100%;
   min-height: 60px;
   display: flex;
@@ -610,45 +668,49 @@ onMounted(() => {
   background-color: white;
   outline: none;
   box-sizing: border-box;
-  border-radius: 0.25rem;
 }
 
-.input-area:focus {
-  outline: none;
-  border-color: #35495e;
-}
-
-.input-area-miss {
-  border-color: #e74c3c;
-}
-
-.input-area-miss:focus {
-  border-color: #e74c3c;
-}
-
-.input-area-correct {
-  border-color: #27ae60;
-}
-
-.input-area-correct:focus {
-  border-color: #27ae60;
-}
-
-.typed-text {
-  color: #27ae60;
+.word-timer-bar {
+  height: 4px;
   background-color: #f0f0f0;
-  padding: 0 0.25rem;
 }
 
-.remaining-text {
-  color: #666;
+.word-timer-progress {
+  height: 100%;
+  width: 100%;
+  background-color: #35495e;
+  transform-origin: right center;
+  transition: transform 0.1s linear;
 }
 
-.end-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+.word-timer-progress.word-timer-warning {
+  background-color: #e74c3c;
+}
+
+.char {
+  display: inline-block;
+}
+
+.char-space {
+  width: 0.5em;
+}
+
+.char-typed {
+  color: #27ae60;
+}
+
+.char-typed.char-space {
+  background-color: rgba(39, 174, 96, 0.2);
+  border-radius: 2px;
+}
+
+.char-current {
+  color: #35495e;
+  border-bottom: 2px solid #35495e;
+}
+
+.char-remaining {
+  color: #999;
 }
 
 .end-stats {
@@ -674,29 +736,6 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.retry-btn {
-  background-color: white;
-  color: #35495e;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  border-radius: 0.25rem;
-}
-
-.retry-btn i {
-  font-size: 0.75rem;
-}
-
-.retry-btn:hover {
-  background-color: #f0f0f0;
-}
-
 @media (max-width: 768px) {
   .game-stats {
     flex-direction: column;
@@ -720,4 +759,3 @@ onMounted(() => {
   display: block;
 }
 </style>
-
