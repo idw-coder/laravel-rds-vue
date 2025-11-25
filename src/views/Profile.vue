@@ -96,6 +96,7 @@ const successMessage = ref('')
 const roles = ref<Role[]>([])
 const avatarPreview = ref<string>('')
 const fileInput = ref<HTMLInputElement>()
+const selectedFile = ref<File | null>(null)
 
 const form = reactive<UpdateProfileData>({
   name: '',
@@ -114,8 +115,9 @@ onMounted(async () => {
     roles.value = user.roles || []
     
     // 既存のアバターがあれば表示
-    if (user.avatar) {
-      avatarPreview.value = `data:image/png;base64,${user.avatar}`
+    if (user.id) {
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
+      avatarPreview.value = `${API_BASE}/avatar/${user.id}`;
     }
   } catch (error) {
     errorMessage.value = 'プロフィールの取得に失敗しました'
@@ -135,45 +137,21 @@ const handleFileChange = (event: Event) => {
   if (!file) return
   
   // ファイルサイズチェック（2MB以下）
-  if (file.size > 2 * 1024 * 1024) {
-    errorMessage.value = '画像サイズは2MB以下にしてください'
-    return
+  // if (file.size > 2 * 1024 * 1024) {
+  //   errorMessage.value = '画像サイズは2MB以下にしてください'
+  //   return
+  // }
+  
+  // 既存のオブジェクトURLがあればクリーンアップ
+  if (avatarPreview.value && avatarPreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(avatarPreview.value)
   }
   
-  // 画像を圧縮してBase64に変換
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const img = new Image()
-    img.onload = () => {
-      // Canvasで圧縮
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
-      
-      // 最大サイズを900x900に制限
-      const MAX_SIZE = 900
-      let width = img.width
-      let height = img.height
-      
-      if (width > height && width > MAX_SIZE) {
-        height = (height * MAX_SIZE) / width
-        width = MAX_SIZE
-      } else if (height > MAX_SIZE) {
-        width = (width * MAX_SIZE) / height
-        height = MAX_SIZE
-      }
-      
-      canvas.width = width
-      canvas.height = height
-      ctx.drawImage(img, 0, 0, width, height)
-      
-      // 圧縮率0.7でBase64に変換
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7)
-      avatarPreview.value = compressedBase64
-      form.avatar = compressedBase64
-    }
-    img.src = e.target?.result as string
-  }
-  reader.readAsDataURL(file)
+  // プレビュー用にオブジェクトURLを作成
+  avatarPreview.value = URL.createObjectURL(file)
+  
+  // ファイルオブジェクトを保持（Base64変換は不要）
+  selectedFile.value = file
 }
 
 const handleDeleteAvatar = async () => {
@@ -182,19 +160,22 @@ const handleDeleteAvatar = async () => {
     successMessage.value = ''
     isSaving.value = true
 
-    // アバターをnullに設定して削除
-    const data: UpdateProfileData = {
-      name: form.name,
-      email: form.email,
-      avatar: null,
-    }
+    // FormDataで削除フラグを送信
+    const formData = new FormData()
+    formData.append('name', form.name)
+    formData.append('email', form.email)
+    formData.append('delete_avatar', 'true')
 
-    const response = await userApi.updateProfile(data)
+    const response = await userApi.updateProfileWithFormData(formData)
     successMessage.value = response.message || 'アバター画像を削除しました'
 
     // プレビューとフォームをクリア
+    if (avatarPreview.value && avatarPreview.value.startsWith('blob:')) {
+      URL.revokeObjectURL(avatarPreview.value)
+    }
     avatarPreview.value = ''
     form.avatar = ''
+    selectedFile.value = null
     
     // ファイル入力もリセット
     if (fileInput.value) {
@@ -213,28 +194,44 @@ const handleSubmit = async () => {
     successMessage.value = ''
     isSaving.value = true
 
-    // パスワードが入力されていない場合は削除
-    const data: UpdateProfileData = {
-      name: form.name,
-      email: form.email,
-    }
+    // ファイルが選択されている場合はFormDataを使用
+    if (selectedFile.value) {
+      const formData = new FormData()
+      formData.append('name', form.name)
+      formData.append('email', form.email)
+      formData.append('avatar', selectedFile.value)
 
-    if (form.password) {
-      data.password = form.password
-      data.password_confirmation = form.password_confirmation
-    }
+      if (form.password) {
+        formData.append('password', form.password)
+        if (form.password_confirmation) {
+          formData.append('password_confirmation', form.password_confirmation)
+        }
+      }
 
-    // アバターが変更されている場合
-    if (form.avatar) {
-      data.avatar = form.avatar
-    }
+      const response = await userApi.updateProfileWithFormData(formData)
+      successMessage.value = response.message
+    } else {
+      // ファイルが選択されていない場合は通常のJSON送信
+      const data: UpdateProfileData = {
+        name: form.name,
+        email: form.email,
+      }
 
-    const response = await userApi.updateProfile(data)
-    successMessage.value = response.message
+      if (form.password) {
+        data.password = form.password
+        data.password_confirmation = form.password_confirmation
+      }
+
+      const response = await userApi.updateProfile(data)
+      successMessage.value = response.message
+    }
 
     // パスワードフィールドをクリア
     form.password = ''
     form.password_confirmation = ''
+    
+    // ファイル選択をクリア
+    selectedFile.value = null
   } catch (error: any) {
     errorMessage.value = error.message || 'プロフィールの更新に失敗しました'
   } finally {

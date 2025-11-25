@@ -15,8 +15,8 @@
           <div class="post-meta-left">
             <span class="user-info">
               <img 
-                v-if="post.user?.avatar" 
-                :src="`data:image/png;base64,${post.user.avatar}`" 
+                v-if="post.user?.id" 
+                :src="`${API_BASE}/avatar/${post.user.id}`" 
                 :alt="post.user?.name || 'ユーザー'"
                 class="user-avatar"
                 loading="lazy"
@@ -53,6 +53,7 @@
   const router = useRouter()
   const route = useRoute()
   const post = ref<Post | null>(null)
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
   const isLocalhost = computed(() => {
     return typeof window !== 'undefined' && window.location.hostname === 'localhost'

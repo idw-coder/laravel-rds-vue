@@ -36,8 +36,17 @@ export const userApi = {
   // プロフィール更新
   async updateProfile(data: UpdateProfileData): Promise<{ message: string; user: User }> {
     const response = await fetchWithAuth(`${API_BASE}/profile`, {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  // プロフィール更新（FormData使用、ファイルアップロード用）
+  async updateProfileWithFormData(formData: FormData): Promise<{ message: string; user: User }> {
+    const response = await fetchWithAuth(`${API_BASE}/profile`, {
+      method: "POST",
+      body: formData,
     });
     return response.json();
   },

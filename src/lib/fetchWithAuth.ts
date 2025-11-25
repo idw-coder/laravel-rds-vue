@@ -5,15 +5,21 @@ export async function fetchWithAuth(
     // Laravel Sanctum の認証トークンを取得
     const token = localStorage.getItem("authToken");
   
+    // FormDataの場合はContent-Typeを設定しない（ブラウザが自動設定）
+    const isFormData = options.body instanceof FormData;
+  
     // HTTPリクエストのヘッダーを構築
-    const headers = {
-      // デフォルトでJSON形式のコンテンツタイプを設定
-      "Content-Type": "application/json",
-      // オプションで渡された既存のヘッダーを展開してマージ（上書き可能）
-      ...(options.headers || {}),
-      // トークンが存在する場合、AuthorizationヘッダーにBearerトークンを追加
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
+    const headers = new Headers(options.headers);
+    
+    // FormDataでない場合のみJSON形式のコンテンツタイプを設定
+    if (!isFormData) {
+      headers.set("Content-Type", "application/json");
+    }
+    
+    // トークンが存在する場合、AuthorizationヘッダーにBearerトークンを追加
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
   
     const response = await fetch(url, {
       ...options,

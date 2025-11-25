@@ -86,8 +86,9 @@ const getUserAvatar = (): string => {
     const userStr = localStorage.getItem("user");
     if (!userStr) return '';
     const user: any = JSON.parse(userStr);
-    if (user?.avatar) {
-      return `data:image/png;base64,${user.avatar}`;
+    if (user?.id) {
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
+      return `${API_BASE}/avatar/${user.id}`;
     }
     return '';
   } catch {
@@ -102,13 +103,14 @@ const updateUserAvatar = () => {
     // アバターがない場合はプロフィールAPIから取得
     if (!userAvatar.value) {
       userApi.getProfile().then((user) => {
-        if (user.avatar) {
-          userAvatar.value = `data:image/png;base64,${user.avatar}`;
+        if (user.id) {
+          const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
+          userAvatar.value = `${API_BASE}/avatar/${user.id}`;
           // localStorageのユーザー情報を更新
           const userStr = localStorage.getItem("user");
           if (userStr) {
             const currentUser: any = JSON.parse(userStr);
-            currentUser.avatar = user.avatar;
+            currentUser.id = user.id;
             localStorage.setItem("user", JSON.stringify(currentUser));
           }
         }
@@ -357,7 +359,7 @@ header {
 .user-icon {
   font-size: 1.5rem;
   cursor: pointer;
-  padding: 0.25rem;
+  /* padding: 0.25rem; */
   color: #35495e;
   display: flex;
   align-items: center;
