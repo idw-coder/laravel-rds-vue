@@ -1,0 +1,9 @@
+[
+  { "command": "docker build", "description": "イメージをビルドする" },
+  { "command": "docker run", "description": "コンテナを実行する" },
+  { "command": "docker ps", "description": "実行中のコンテナを表示する" },
+  { "command": "docker stop", "description": "コンテナを停止する" },
+  { "command": "docker images", "description": "イメージ一覧を表示する" },
+  { "command": "docker-compose up", "description": "Composeで起動する" }
+]
+

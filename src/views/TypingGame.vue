@@ -159,6 +159,7 @@ const getCategoryColorClass = (slug: string, isSelected: boolean): string => {
     git: { normal: 'category-git', selected: 'category-git-selected' },
     docker: { normal: 'category-docker', selected: 'category-docker-selected' },
     javascript: { normal: 'category-javascript', selected: 'category-javascript-selected' },
+    laravel: { normal: 'category-laravel', selected: 'category-laravel-selected' },
   }
 
   if (colorMap[slug]) {
@@ -175,6 +176,7 @@ const getCategoryIcon = (slug: string): string => {
     git: 'fab fa-git-alt',
     docker: 'fab fa-docker',
     javascript: 'fab fa-js',
+    laravel: 'fab fa-laravel',
   }
 
   return iconMap[slug] || 'fas fa-code'
@@ -445,6 +447,18 @@ onMounted(() => {
   background-color: rgba(53, 73, 94, 0.2);
   color: #35495e;
   border-color: #35495e;
+}
+
+.category-laravel {
+  background-color: #f0f0f0;
+  color: #35495e;
+  border-color: #ddd;
+}
+
+.category-laravel-selected {
+  background-color: rgba(255, 45, 32, 0.1);
+  color: #ff2d20;
+  border-color: #ff2d20;
 }
 
 .category-default {

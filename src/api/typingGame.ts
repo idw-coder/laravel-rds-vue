@@ -1,4 +1,8 @@
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
+import mockDataGit from "./mockData-git.json";
+import mockDataDocker from "./mockData-docker.json";
+import mockDataJavascript from "./mockData-javascript.json";
+import mockDataLaravel from "./mockData-laravel.json";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
 
@@ -59,40 +63,18 @@ function getMockCategories(): Category[] {
     { slug: "git", name: "Git" },
     { slug: "docker", name: "Docker" },
     { slug: "javascript", name: "JavaScript" },
+    { slug: "laravel", name: "Laravel" },
   ];
 }
 
 // モックコマンドデータ
 function getMockCommands(categorySlug: string): WordEntry[] {
-  const mockData: { [key: string]: WordEntry[] } = {
-    git: [
-      { command: "git init", description: "リポジトリを初期化する" },
-      { command: "git add .", description: "すべての変更をステージングする" },
-      { command: "git commit -m", description: "変更をコミットする" },
-      { command: "git push", description: "リモートにプッシュする" },
-      { command: "git pull", description: "リモートから取得する" },
-      { command: "git status", description: "状態を確認する" },
-      { command: "git branch", description: "ブランチ一覧を表示する" },
-      { command: "git checkout", description: "ブランチを切り替える" },
-    ],
-    docker: [
-      { command: "docker build", description: "イメージをビルドする" },
-      { command: "docker run", description: "コンテナを実行する" },
-      { command: "docker ps", description: "実行中のコンテナを表示する" },
-      { command: "docker stop", description: "コンテナを停止する" },
-      { command: "docker images", description: "イメージ一覧を表示する" },
-      { command: "docker-compose up", description: "Composeで起動する" },
-    ],
-    javascript: [
-      { command: "console.log", description: "コンソールに出力する" },
-      { command: "const", description: "定数を宣言する" },
-      { command: "let", description: "変数を宣言する" },
-      { command: "function", description: "関数を定義する" },
-      { command: "async await", description: "非同期処理を記述する" },
-      { command: "Promise", description: "非同期処理のオブジェクト" },
-    ],
+  const mockDataMap: { [key: string]: WordEntry[] } = {
+    git: mockDataGit as WordEntry[],
+    docker: mockDataDocker as WordEntry[],
+    javascript: mockDataJavascript as WordEntry[],
+    laravel: mockDataLaravel as WordEntry[],
   };
-
-  return mockData[categorySlug] || [];
+  return mockDataMap[categorySlug] || [];
 }
 

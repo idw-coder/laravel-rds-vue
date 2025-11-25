@@ -1,0 +1,9 @@
+[
+  { "command": "console.log", "description": "コンソールに出力する" },
+  { "command": "const", "description": "定数を宣言する" },
+  { "command": "let", "description": "変数を宣言する" },
+  { "command": "function", "description": "関数を定義する" },
+  { "command": "async await", "description": "非同期処理を記述する" },
+  { "command": "Promise", "description": "非同期処理のオブジェクト" }
+]
+

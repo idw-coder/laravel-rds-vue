@@ -1,0 +1,11 @@
+[
+  { "command": "git init", "description": "リポジトリを初期化する" },
+  { "command": "git add .", "description": "すべての変更をステージングする" },
+  { "command": "git commit -m", "description": "変更をコミットする" },
+  { "command": "git push", "description": "リモートにプッシュする" },
+  { "command": "git pull", "description": "リモートから取得する" },
+  { "command": "git status", "description": "状態を確認する" },
+  { "command": "git branch", "description": "ブランチ一覧を表示する" },
+  { "command": "git checkout", "description": "ブランチを切り替える" }
+]
+
