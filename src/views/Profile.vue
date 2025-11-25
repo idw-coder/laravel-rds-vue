@@ -136,11 +136,11 @@ const handleFileChange = (event: Event) => {
   
   if (!file) return
   
-  // ファイルサイズチェック（2MB以下）
-  // if (file.size > 2 * 1024 * 1024) {
-  //   errorMessage.value = '画像サイズは2MB以下にしてください'
-  //   return
-  // }
+  // ファイルサイズチェック（5MB以下）
+  if (file.size > 5 * 1024 * 1024) {
+    errorMessage.value = '画像サイズは5MB以下にしてください'
+    return
+  }
   
   // 既存のオブジェクトURLがあればクリーンアップ
   if (avatarPreview.value && avatarPreview.value.startsWith('blob:')) {

@@ -27,7 +27,7 @@ export interface UpdateProfileData {
 }
 
 export const userApi = {
-  // プロフィール取得
+  // プロフィール取得]
   async getProfile(): Promise<User> {
     const response = await fetchWithAuth(`${API_BASE}/profile`);
     return response.json();
