@@ -294,7 +294,7 @@ body {
   font-size: 0.8rem;
 }
 #app {
-  font-family: Arial, sans-serif;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 
 h1 {
