@@ -11,9 +11,22 @@
         </router-link>
         <nav class="nav-container">
           <div class="nav-links">
+            <!-- 投稿権限がある場合はドロップダウン -->
+            <div v-if="canCreatePost" class="nav-dropdown">
+              <span 
+                class="nav-link nav-dropdown-trigger" 
+                :class="{ 'nav-link-active': route.path.startsWith('/posts') }"
+              >投稿 <i class="fas fa-caret-down"></i></span>
+              <div class="nav-dropdown-menu">
+                <router-link class="nav-dropdown-item" to="/posts">投稿一覧</router-link>
+                <router-link class="nav-dropdown-item" to="/posts/create">新規作成</router-link>
+              </div>
+            </div>
+            <!-- 投稿権限がない場合はシンプルなリンク -->
             <router-link 
+              v-else
               class="nav-link" 
-              :class="{ 'nav-link-active': route.path.startsWith('/posts') && route.path !== '/posts/create' }"
+              :class="{ 'nav-link-active': route.path.startsWith('/posts') }"
               to="/posts">投稿一覧</router-link>
             <router-link 
               class="nav-link" 
@@ -27,11 +40,6 @@
               class="nav-link" 
               :class="{ 'nav-link-active': route.path === '/typing-game' }"
               to="/typing-game">タイピングゲーム</router-link>
-            <router-link 
-              v-if="canCreatePost" 
-              class="nav-link" 
-              :class="{ 'nav-link-active': route.path === '/posts/create' }"
-              to="/posts/create">新規作成</router-link>
           </div>
 
           <button class="hamburger-btn" @click="toggleMenu" aria-label="メニュー">
@@ -61,17 +69,17 @@
           <div v-if="isMenuOpen" class="mobile-menu">
             <router-link 
               class="mobile-menu-item" 
-              :class="{ 'mobile-menu-item-active': route.path.startsWith('/posts') && route.path !== '/posts/create' }"
+              :class="{ 'mobile-menu-item-active': route.path === '/posts' }"
               to="/posts" @click="closeMenu">投稿一覧</router-link>
+            <router-link 
+              v-if="canCreatePost" 
+              class="mobile-menu-item mobile-menu-item-sub" 
+              :class="{ 'mobile-menu-item-active': route.path === '/posts/create' }"
+              to="/posts/create" @click="closeMenu">└ 新規作成</router-link>
             <router-link 
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/book-reviews' }"
               to="/book-reviews" @click="closeMenu">技術書レビュー</router-link>
-            <router-link 
-              v-if="canCreatePost" 
-              class="mobile-menu-item" 
-              :class="{ 'mobile-menu-item-active': route.path === '/posts/create' }"
-              to="/posts/create" @click="closeMenu">新規作成</router-link>
             <router-link 
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/youtuber-list' }"
@@ -351,7 +359,58 @@ header {
 
 .nav-link-active {
   color: #42b983;
-  font-weight: bold;
+}
+
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-dropdown-trigger i {
+  font-size: 0.65rem;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 90%;
+  left: 0;
+  margin-top: 0.1rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  min-width: 120px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+  display: flex;
+}
+
+.nav-dropdown-item {
+  padding: 0.75rem 1rem;
+  color: #35495e;
+  text-decoration: none;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  display: block;
+}
+
+.nav-dropdown-item:hover {
+  background-color: #f9f9f9;
+}
+
+.nav-dropdown-item.router-link-exact-active {
+  color: #42b983;
+  background-color: #f0f9f5;
 }
 
 .hamburger-btn {
@@ -401,8 +460,12 @@ header {
 
 .mobile-menu-item-active {
   color: #42b983;
-  font-weight: bold;
   background-color: #f0f9f5;
+}
+
+.mobile-menu-item-sub {
+  padding-left: 1.5rem;
+  color: #666;
 }
 
 @media (max-width: 768px) {
