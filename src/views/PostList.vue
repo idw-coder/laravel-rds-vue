@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="post-list-wrapper">
     <div class="header">
       <h2>投稿一覧</h2>
       <!-- <button @click="goToCreate" class="create-btn">新規作成</button> -->
@@ -121,6 +121,10 @@ const handleAvatarError = (userId: number) => {
 </script>
 
 <style scoped>
+.post-list-wrapper {
+  padding-bottom: 3rem;
+}
+
 .header {
   display: flex;
   justify-content: space-between;

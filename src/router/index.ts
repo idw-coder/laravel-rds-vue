@@ -9,6 +9,7 @@ import PostDetail from "@/views/PostDetail.vue";
 import Profile from "@/views/Profile.vue";
 import TypingGame from "@/views/TypingGame.vue";
 import NotFound from "@/views/NotFound.vue";
+import BookReviewList from "@/views/BookReviewList.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -77,6 +78,11 @@ const router = createRouter({
       path: "/:pathMatch(.*)*",
       name: "not-found",
       component: NotFound,
+    },
+    {
+      path: "/book-reviews",
+      name: "book-reviews",
+      component: BookReviewList,
     },
   ],
 });

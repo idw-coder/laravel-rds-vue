@@ -3,13 +3,31 @@
     <header>
       <div class="header-container">
         <router-link to="/">
-          <h1>Laravel API + Vue 3</h1>
+          <h1>
+            <i class="fas fa-rocket" style="display: none;"></i>
+            <!-- スキルアップ・ポータル（仮） -->
+            Laravel 12 + Vue 3
+          </h1>
         </router-link>
         <nav class="nav-container">
           <div class="nav-links">
-            <router-link class="nav-link" to="/posts">投稿一覧</router-link>
-            <router-link class="nav-link" to="/typing-game">タイピングゲーム</router-link>
-            <router-link v-if="canCreatePost" class="nav-link" to="/posts/create">新規作成</router-link>
+            <router-link 
+              class="nav-link" 
+              :class="{ 'nav-link-active': route.path.startsWith('/posts') && route.path !== '/posts/create' }"
+              to="/posts">投稿一覧</router-link>
+            <router-link 
+              class="nav-link" 
+              :class="{ 'nav-link-active': route.path === '/book-reviews' }"
+              to="/book-reviews">技術書レビュー</router-link>
+            <router-link 
+              class="nav-link" 
+              :class="{ 'nav-link-active': route.path === '/typing-game' }"
+              to="/typing-game">タイピングゲーム</router-link>
+            <router-link 
+              v-if="canCreatePost" 
+              class="nav-link" 
+              :class="{ 'nav-link-active': route.path === '/posts/create' }"
+              to="/posts/create">新規作成</router-link>
           </div>
 
           <button class="hamburger-btn" @click="toggleMenu" aria-label="メニュー">
@@ -37,10 +55,28 @@
 
           <!-- モバイルメニュー -->
           <div v-if="isMenuOpen" class="mobile-menu">
-            <router-link class="mobile-menu-item" to="/posts" @click="closeMenu">投稿一覧</router-link>
-            <router-link v-if="canCreatePost" class="mobile-menu-item" to="/posts/create" @click="closeMenu">新規作成</router-link>
-            <router-link class="mobile-menu-item" to="/typing-game" @click="closeMenu">タイピングゲーム</router-link>
-            <router-link v-if="isLoggedIn" class="mobile-menu-item" to="/profile" @click="closeMenu">プロフィール</router-link>
+            <router-link 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path.startsWith('/posts') && route.path !== '/posts/create' }"
+              to="/posts" @click="closeMenu">投稿一覧</router-link>
+            <router-link 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path === '/book-reviews' }"
+              to="/book-reviews" @click="closeMenu">技術書レビュー</router-link>
+            <router-link 
+              v-if="canCreatePost" 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path === '/posts/create' }"
+              to="/posts/create" @click="closeMenu">新規作成</router-link>
+            <router-link 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path === '/typing-game' }"
+              to="/typing-game" @click="closeMenu">タイピングゲーム</router-link>
+            <router-link 
+              v-if="isLoggedIn" 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path === '/profile' }"
+              to="/profile" @click="closeMenu">プロフィール</router-link>
             <router-link v-if="!isLoggedIn" class="mobile-menu-item" to="/login" @click="closeMenu">ログイン</router-link>
             <router-link v-if="!isLoggedIn" class="mobile-menu-item" to="/register" @click="closeMenu">新規登録</router-link>
             <button v-if="isLoggedIn" @click="handleLogoutMobile" class="mobile-menu-item logout-item">ログアウト</button>
@@ -57,11 +93,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { authApi } from "./api/auth";
 import { userApi, type User, type Role } from "./api/user";
 
 const router = useRouter();
+const route = useRoute();
 /**
  * computedでルート変更時に自動で再評価される？
  * localStorage の変更については再評価されない
@@ -256,6 +293,15 @@ h1 {
   font-size: 1rem;
   color: #35495e;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+h1 i {
+  font-size: 1.1rem;
+  color: #35495e;
 }
 
 header {
@@ -293,6 +339,11 @@ header {
 .nav-link {
   color: #35495e;
   text-decoration: none;
+}
+
+.nav-link-active {
+  color: #42b983;
+  font-weight: bold;
 }
 
 .hamburger-btn {
@@ -338,6 +389,12 @@ header {
 
 .mobile-menu-item:hover {
   background-color: #f9f9f9;
+}
+
+.mobile-menu-item-active {
+  color: #42b983;
+  font-weight: bold;
+  background-color: #f0f9f5;
 }
 
 @media (max-width: 768px) {
