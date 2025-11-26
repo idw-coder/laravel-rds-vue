@@ -28,6 +28,8 @@ jobs:
       - name: Build Vue app
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
+          VITE_RAKUTEN_APP_ID: ${{ secrets.VITE_RAKUTEN_APP_ID }}
         run: npm run build
 
       # SSH 接続して dist をデプロイ

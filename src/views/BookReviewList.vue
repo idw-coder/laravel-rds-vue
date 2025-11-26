@@ -142,8 +142,9 @@
         }
 
         // 2. Google Booksで見つからない場合、楽天ブックスAPIで検索
+        const RAKUTEN_APP_ID = import.meta.env.VITE_RAKUTEN_APP_ID
         const rakutenResponse = await fetch(
-          `https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=1013312415921105414&isbn=${book.isbn}`
+          `https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=${RAKUTEN_APP_ID}&isbn=${book.isbn}`
         )
         const rakutenData = await rakutenResponse.json()
 

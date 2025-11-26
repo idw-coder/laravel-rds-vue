@@ -153,7 +153,7 @@ const CACHE_KEY = 'youtuber_cache'
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24時間
 
 const fetchYouTuberInfo = async () => {
-  const API_KEY = 'AIzaSyDbmhip8lsfwNXRNf-E1bLa8T8p1o4Xtio'
+  const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY
   
   // キャッシュを取得
   const cachedData = localStorage.getItem(CACHE_KEY)
