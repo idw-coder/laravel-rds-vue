@@ -358,7 +358,8 @@ header {
 }
 
 .nav-link-active {
-  color: #42b983;
+  color: #13283c;
+  font-weight: 600;
 }
 
 .nav-dropdown {
@@ -409,7 +410,7 @@ header {
 }
 
 .nav-dropdown-item.router-link-exact-active {
-  color: #42b983;
+  color: #13283c;
   background-color: #f0f9f5;
 }
 
@@ -459,7 +460,7 @@ header {
 }
 
 .mobile-menu-item-active {
-  color: #42b983;
+  color: #13283c;
   background-color: #f0f9f5;
 }
 

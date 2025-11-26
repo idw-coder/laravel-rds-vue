@@ -296,11 +296,11 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  transition: background-color 0.3s;
+  transition: opacity 0.3s;
 }
 
 .youtuber-card:hover {
-  background-color: rgba(53, 73, 94, 0.1);
+  opacity: 0.7;
 }
 
 /* ヘッダー部分 */

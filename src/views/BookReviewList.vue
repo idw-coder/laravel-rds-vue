@@ -192,11 +192,11 @@
   }
   
   .book-item {
-    transition: background-color 0.3s;
+    transition: opacity 0.3s;
   }
   
   .book-item:hover {
-    background-color: rgba(53, 73, 94, 0.1);
+    opacity: 0.7;
   }
   
   .book-content {
@@ -298,12 +298,13 @@
     gap: 0.5rem;
   }
   
-  .status-label {
-    background-color: #f0f0f0;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-  }
+.status-label {
+  background-color: #e8f5ef;
+  color: #42b983;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
   
   @media (max-width: 768px) {
     .book-content {

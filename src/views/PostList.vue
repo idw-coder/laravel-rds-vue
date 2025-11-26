@@ -150,11 +150,11 @@ li {
 
 .post-item {
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: opacity 0.3s;
 }
 
 .post-item:hover {
-  background-color: rgba(53, 73, 94, 0.1);
+  opacity: 0.7;
 }
 
 h2 {
@@ -214,7 +214,8 @@ h3, p {
 }
 
 .status-label {
-  background-color: #f0f0f0;
+  background-color: #e8f5ef;
+  color: #42b983;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
