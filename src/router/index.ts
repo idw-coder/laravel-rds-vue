@@ -10,6 +10,7 @@ import Profile from "@/views/Profile.vue";
 import TypingGame from "@/views/TypingGame.vue";
 import NotFound from "@/views/NotFound.vue";
 import BookReviewList from "@/views/BookReviewList.vue";
+import YouTuberList from "@/views/YouTuberList.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -83,6 +84,11 @@ const router = createRouter({
       path: "/book-reviews",
       name: "book-reviews",
       component: BookReviewList,
+    },
+    {
+      path: "/youtuber-list",
+      name: "youtuber-list",
+      component: YouTuberList,
     },
   ],
 });
