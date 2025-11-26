@@ -23,6 +23,7 @@
                 :src="userAvatar" 
                 alt="User Avatar"
                 class="user-avatar-icon"
+                @error="handleAvatarError"
               />
               <i v-else class="fas fa-user-circle"></i>
             </div>
@@ -37,8 +38,8 @@
           <!-- モバイルメニュー -->
           <div v-if="isMenuOpen" class="mobile-menu">
             <router-link class="mobile-menu-item" to="/posts" @click="closeMenu">投稿一覧</router-link>
-            <router-link class="mobile-menu-item" to="/typing-game" @click="closeMenu">タイピングゲーム</router-link>
             <router-link v-if="canCreatePost" class="mobile-menu-item" to="/posts/create" @click="closeMenu">新規作成</router-link>
+            <router-link class="mobile-menu-item" to="/typing-game" @click="closeMenu">タイピングゲーム</router-link>
             <router-link v-if="isLoggedIn" class="mobile-menu-item" to="/profile" @click="closeMenu">プロフィール</router-link>
             <router-link v-if="!isLoggedIn" class="mobile-menu-item" to="/login" @click="closeMenu">ログイン</router-link>
             <router-link v-if="!isLoggedIn" class="mobile-menu-item" to="/register" @click="closeMenu">新規登録</router-link>
@@ -78,6 +79,11 @@ const toggleMenu = () => {
 
 const closeMenu = () => {
   isMenuOpen.value = false;
+};
+
+// アバター画像の読み込みエラー（404など）を処理
+const handleAvatarError = () => {
+  userAvatar.value = '';
 };
 
 // ユーザーアバターを取得

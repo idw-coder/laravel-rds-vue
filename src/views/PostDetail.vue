@@ -15,11 +15,12 @@
           <div class="post-meta-left">
             <span class="user-info">
               <img 
-                v-if="post.user?.id" 
+                v-if="post.user?.id && !avatarError" 
                 :src="`${API_BASE}/avatar/${post.user.id}`" 
                 :alt="post.user?.name || 'ユーザー'"
                 class="user-avatar"
                 loading="lazy"
+                @error="handleAvatarError"
               />
               <i v-else class="fas fa-user"></i>
               {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}
@@ -53,6 +54,7 @@
   const router = useRouter()
   const route = useRoute()
   const post = ref<Post | null>(null)
+  const avatarError = ref(false)
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
   const isLocalhost = computed(() => {
@@ -102,6 +104,11 @@
   const formatDate = (date: string | undefined) => {
     if (!date) return '-'
     return new Date(date).toLocaleDateString('ja-JP')
+  }
+
+  // アバター画像の読み込みエラー（404など）を処理
+  const handleAvatarError = () => {
+    avatarError.value = true
   }
   
   const goToEdit = () => {

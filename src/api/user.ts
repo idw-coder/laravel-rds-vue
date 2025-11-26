@@ -30,6 +30,10 @@ export const userApi = {
   // プロフィール取得]
   async getProfile(): Promise<User> {
     const response = await fetchWithAuth(`${API_BASE}/profile`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'プロフィールの取得に失敗しました' }));
+      throw new Error(errorData.message || 'プロフィールの取得に失敗しました');
+    }
     return response.json();
   },
 
@@ -39,7 +43,11 @@ export const userApi = {
       method: "POST",
       body: JSON.stringify(data),
     });
-    return response.json();
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw new Error(responseData.message || 'プロフィールの更新に失敗しました');
+    }
+    return responseData;
   },
 
   // プロフィール更新（FormData使用、ファイルアップロード用）
@@ -48,6 +56,10 @@ export const userApi = {
       method: "POST",
       body: formData,
     });
-    return response.json();
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw new Error(responseData.message || 'プロフィールの更新に失敗しました');
+    }
+    return responseData;
   },
 };

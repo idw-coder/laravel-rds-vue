@@ -15,6 +15,7 @@
               :src="avatarPreview"
               alt="Avatar Preview"
               class="avatar-image"
+              @error="handleAvatarError"
             />
             <div v-else class="avatar-placeholder">画像未設定</div>
           </div>
@@ -128,6 +129,16 @@ onMounted(async () => {
 
 const selectFile = () => {
   fileInput.value?.click()
+}
+
+// アバター画像の読み込みエラー（404など）を処理
+const handleAvatarError = () => {
+  // blob URLの場合はエラー処理しない（ローカルファイルのプレビュー）
+  if (avatarPreview.value && avatarPreview.value.startsWith('blob:')) {
+    return
+  }
+  // API URLの場合はエラー時にプレビューをクリア
+  avatarPreview.value = ''
 }
 
 const handleFileChange = (event: Event) => {

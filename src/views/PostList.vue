@@ -14,11 +14,12 @@
           <div class="post-meta-left">
             <span class="user-info">
               <img 
-                v-if="post.user?.id" 
+                v-if="post.user?.id && !avatarErrors.has(post.user.id)" 
                 :src="`${API_BASE}/avatar/${post.user.id}`" 
                 :alt="post.user?.name || 'ユーザー'"
                 class="user-avatar"
                 loading="lazy"
+                @error="() => post.user?.id && handleAvatarError(post.user.id)"
               />
               <i v-else class="fas fa-user"></i>
               {{ post.user?.name || (post.user?.id ?? post.user_id ?? '不明') }}
@@ -72,6 +73,7 @@ const posts = ref<Post[]>([])
 const isLoading = ref(true)
 const currentPage = ref(1)
 const itemsPerPage = 10 // 1ページあたりの表示件数
+const avatarErrors = ref<Set<number>>(new Set())
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
 const isLocalhost = computed(() => {
@@ -110,6 +112,11 @@ onMounted(async () => {
 // 詳細ページへ（追加）
 const goToDetail = (id: number) => {
   router.push(`/posts/${id}`)
+}
+
+// アバター画像の読み込みエラー（404など）を処理
+const handleAvatarError = (userId: number) => {
+  avatarErrors.value.add(userId)
 }
 </script>
 
