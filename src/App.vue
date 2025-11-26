@@ -21,6 +21,10 @@
               to="/book-reviews">技術書レビュー</router-link>
             <router-link 
               class="nav-link" 
+              :class="{ 'nav-link-active': route.path === '/youtuber-list' }"
+              to="/youtuber-list">YouTuber一覧</router-link>
+            <router-link 
+              class="nav-link" 
               :class="{ 'nav-link-active': route.path === '/typing-game' }"
               to="/typing-game">タイピングゲーム</router-link>
             <router-link 
@@ -68,6 +72,10 @@
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/posts/create' }"
               to="/posts/create" @click="closeMenu">新規作成</router-link>
+            <router-link 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path === '/youtuber-list' }"
+              to="/youtuber-list" @click="closeMenu">YouTuber一覧</router-link>
             <router-link 
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/typing-game' }"
