@@ -40,6 +40,11 @@
               class="nav-link" 
               :class="{ 'nav-link-active': route.path === '/typing-game' }"
               to="/typing-game">タイピングゲーム</router-link>
+            <router-link 
+              v-if="isAdmin"
+              class="nav-link" 
+              :class="{ 'nav-link-active': route.path.startsWith('/admin') }"
+              to="/admin/users">管理</router-link>
           </div>
 
           <button class="hamburger-btn" @click="toggleMenu" aria-label="メニュー">
@@ -88,6 +93,11 @@
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/typing-game' }"
               to="/typing-game" @click="closeMenu">タイピングゲーム</router-link>
+            <router-link 
+              v-if="isAdmin"
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path.startsWith('/admin') }"
+              to="/admin/users" @click="closeMenu">管理</router-link>
             <router-link 
               v-if="isLoggedIn" 
               class="mobile-menu-item" 
@@ -248,6 +258,12 @@ const canCreatePost = computed(() => {
   return userRoles.value.some(
     (role) => role.name === "admin" || role.name === "paid"
   );
+});
+
+// 管理者かどうかチェック
+const isAdmin = computed(() => {
+  if (!isLoggedIn.value) return false;
+  return userRoles.value.some((role) => role.name === "admin");
 });
 
 // ルート変更時にログイン状態とロール情報を再チェック

@@ -11,6 +11,7 @@ import TypingGame from "@/views/TypingGame.vue";
 import NotFound from "@/views/NotFound.vue";
 import BookReviewList from "@/views/BookReviewList.vue";
 import YouTuberList from "@/views/YouTuberList.vue";
+import AdminUsers from "@/views/AdminUsers.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -90,6 +91,12 @@ const router = createRouter({
       name: "youtuber-list",
       component: YouTuberList,
     },
+    {
+      path: "/admin/users",
+      name: "admin-users",
+      component: AdminUsers,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
   ],
 });
 
@@ -101,6 +108,27 @@ router.beforeEach((to, from, next) => {
     return next("/login");
   }
 
+  // 管理者権限チェック
+  if (to.meta.requiresAdmin) {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const roles = user.roles || [];
+        const isAdmin = roles.some((role: any) => 
+          role === "admin" || role.name === "admin"
+        );
+        if (!isAdmin) {
+          return next("/");
+        }
+      } else {
+        return next("/");
+      }
+    } catch {
+      return next("/");
+    }
+  }
+  
   next();
 });
 
