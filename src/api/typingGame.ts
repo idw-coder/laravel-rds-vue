@@ -3,6 +3,8 @@ import mockDataGit from "./mockData-git.json";
 import mockDataDocker from "./mockData-docker.json";
 import mockDataJavascript from "./mockData-javascript.json";
 import mockDataLaravel from "./mockData-laravel.json";
+import mockDataAichat from "./mockData-aichat.json";
+import mockDataSql from "./mockData-sql.json";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
 
@@ -64,6 +66,8 @@ function getMockCategories(): Category[] {
     { slug: "docker", name: "Docker" },
     { slug: "javascript", name: "JavaScript" },
     { slug: "laravel", name: "Laravel" },
+    { slug: "aichat", name: "AIチャット" },
+    { slug: "sql", name: "SQL" },
   ];
 }
 
@@ -74,6 +78,8 @@ function getMockCommands(categorySlug: string): WordEntry[] {
     docker: mockDataDocker as WordEntry[],
     javascript: mockDataJavascript as WordEntry[],
     laravel: mockDataLaravel as WordEntry[],
+    aichat: mockDataAichat as WordEntry[],
+    sql: mockDataSql as WordEntry[],
   };
   return mockDataMap[categorySlug] || [];
 }

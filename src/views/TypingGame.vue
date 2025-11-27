@@ -201,6 +201,8 @@ const getCategoryColorClass = (slug: string, isSelected: boolean): string => {
     docker: { normal: 'category-docker', selected: 'category-docker-selected' },
     javascript: { normal: 'category-javascript', selected: 'category-javascript-selected' },
     laravel: { normal: 'category-laravel', selected: 'category-laravel-selected' },
+    aichat: { normal: 'category-aichat', selected: 'category-aichat-selected' },
+    sql: { normal: 'category-sql', selected: 'category-sql-selected' },
   }
   const colors = colorMap[slug]
   if (colors) {
@@ -216,6 +218,8 @@ const getCategoryIcon = (slug: string): string => {
     docker: 'fab fa-docker',
     javascript: 'fab fa-js',
     laravel: 'fab fa-laravel',
+    aichat: 'fas fa-robot',
+    sql: 'fas fa-database',
   }
   return iconMap[slug] || 'fas fa-code'
 }
@@ -428,7 +432,7 @@ onMounted(() => {
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
@@ -462,7 +466,9 @@ onMounted(() => {
 .category-git,
 .category-docker,
 .category-javascript,
-.category-laravel {
+.category-laravel,
+.category-aichat,
+.category-sql {
   background-color: #f0f0f0;
   color: #35495e;
   border-color: #ddd;
@@ -480,6 +486,18 @@ onMounted(() => {
   background-color: rgba(255, 45, 32, 0.1);
   color: #ff2d20;
   border-color: #ff2d20;
+}
+
+.category-aichat-selected {
+  background-color: rgba(16, 163, 127, 0.1);
+  color: #10a37f;
+  border-color: #10a37f;
+}
+
+.category-sql-selected {
+  background-color: rgba(0, 117, 143, 0.1);
+  color: #00758f;
+  border-color: #00758f;
 }
 
 .category-default {
@@ -744,7 +762,7 @@ onMounted(() => {
   }
 
   .category-grid {
-    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
   }
 
   .input-area {

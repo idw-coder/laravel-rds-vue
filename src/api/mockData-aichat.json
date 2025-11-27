@@ -1,0 +1,17 @@
+[
+  { "command": "kono koodo wo rifakutaringu shitekudasai", "description": "このコードをリファクタリングしてください" },
+  { "command": "bagu no genin wo oshietekudasai", "description": "バグの原因を教えてください" },
+  { "command": "motto shinpuru ni kakemasu ka", "description": "もっとシンプルに書けますか？" },
+  { "command": "tesuto koodo wo kaitekudasai", "description": "テストコードを書いてください" },
+  { "command": "kono kansuu no tsukaikata wo oshietekudasai", "description": "この関数の使い方を教えてください" },
+  { "command": "pafoomansu wo kaizen shitekudasai", "description": "パフォーマンスを改善してください" },
+  { "command": "komento wo tsuika shitekudasai", "description": "コメントを追加してください" },
+  { "command": "eraa handoringu wo tsuika shitekudasai", "description": "エラーハンドリングを追加してください" },
+  { "command": "kono gainen wo wakariyasuku setsumei shitekudasai", "description": "この概念をわかりやすく説明してください" },
+  { "command": "sekyuriti no mondai wa arimasu ka", "description": "セキュリティの問題はありますか？" },
+  { "command": "besuto purakutisu wo oshietekudasai", "description": "ベストプラクティスを教えてください" },
+  { "command": "riidomi wo sakusei shitekudasai", "description": "READMEを作成してください" },
+  { "command": "kono eraa messeji no imi wa", "description": "このエラーメッセージの意味は？" },
+  { "command": "debaggu houhou wo oshietekudasai", "description": "デバッグ方法を教えてください" },
+  { "command": "watashinoikanorikaidemachigainaikakuninnwoonegaisimasu", "description": "私の以下の理解で間違っていないかの確認をお願いします" }
+]
