@@ -1,152 +1,149 @@
 <template>
-    <div class="editor-home">
-      <div class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-          <h2>シンプル、登録なしで<br class="sp-only">リアルタイム共同編集</h2>
-          <p class="editor-home-description">
-            ログインなし ／ リアルタイム共同編集 ／ メールで共有
-          </p>
-          <button @click="createRoom" class="create-btn">
-            新しいルームを作成
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
+  <div class="editor-home">
+    <div class="hero-section">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h2>シンプル<br class="sp-only" />登録なしで<br />リアルタイム共同編集</h2>
+        <p class="editor-home-description">
+          <span class="editor-home-description-item"><i class="fas fa-check"></i>ログイン不要</span>
+          <span class="editor-home-description-item"><i class="fas fa-check"></i>メールで共有</span>
+          <span class="editor-home-description-item"><i class="fas fa-check"></i>無料で使える</span>
+        </p>
+        <button @click="createRoom" class="create-btn">
+          新しいルームを作成
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
-  
     </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { useRouter } from "vue-router";
-  
-  const router = useRouter();
-  
-  const createRoom = () => {
-    const roomId = crypto.randomUUID();
-    router.push(`/editor/${roomId}`);
-  };
-  </script>
-  
-  <style scoped>
-  .editor-home {
-    width: 100%;
-  }
-  
-  /* ヒーローセクション */
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const createRoom = () => {
+  const roomId = crypto.randomUUID();
+  router.push(`/editor/${roomId}`);
+};
+</script>
+
+<style scoped>
+.editor-home {
+  display: flex;
+  flex-direction: column;
+  min-height: 80vh;
+  justify-content: center;
+}
+
+.hero-section {
+  position: relative;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  background-image: url('/images/business-woman04.jpg');
+  background-size: cover;
+  background-position: center center;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 3rem;
+}
+
+h2 {
+  color: white;
+  font-size: clamp(2rem, 2.5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.5;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.05em;
+}
+
+.sp-only {
+  display: none;
+}
+
+.editor-home-description {
+  color: #fff;
+  margin: 0 0 2rem 0;
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
+  font-weight: 500;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  display: flex;
+  gap: 1rem;
+}
+
+.editor-home-description-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-bottom: 0.2rem;
+}
+
+.editor-home-description-item i {
+  font-size: 0.9em;
+}
+
+.create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: #fff;
+  color: #333;
+  border: none;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.create-btn:hover {
+  background: #f5f5f5;
+}
+
+.create-btn i {
+  font-size: 0.75rem;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
   .hero-section {
-    position: relative;
-    /* 高さは少し抑えめにして標準的な印象に */
-    min-height: 70vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-image: url('/images/business-pc03.jpg');
-    background-size: cover;
-    background-position: center;
-    color: #ffffff;
+    min-height: 80vh;
   }
-  
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    /* オーバーレイは少し濃くして文字を読みやすく */
-    background: rgba(30, 40, 50, 0.8);
-  }
-  
+
   .hero-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 3rem 2rem; /* 余白を調整 */
-    max-width: 800px;
-    margin: 0 auto;
+    padding: 1rem;
   }
-  
-  h2 {
-    /* フォントサイズを少し抑えて落ち着いた印象に */
-    font-size: 2.25rem;
-    font-weight: 700;
-    margin: 0 0 1.5rem 0; /* 下の余白を増やす */
-    line-height: 1.3;
-    /* シャドウを少し弱く */
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  .hero-overlay {
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
   }
-  
-  .editor-home-description {
-    color: rgba(255, 255, 255, 0.85);
-    margin: 0 0 3rem 0; /* 下の余白を増やす */
-    font-size: 1.1rem;
-    font-weight: 400; /* ウェイトを標準に戻す */
-    letter-spacing: 0.05em; /* 少し字間を空ける */
-  }
-  
-  /* ボタンデザインの刷新 (border-radiusなしのフラットデザイン) */
-  .create-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 3rem; /* 横幅を広げる */
-    font-size: 1rem;
-    font-weight: 600;
-    background: #ffffff;
-    color: #333333; /* 文字色を少し濃く */
-    border: none;
-    border-radius: 0; /* ★ご指示通り角を直角に */
-    cursor: pointer;
-    transition: all 0.2s ease;
-    /* 影をなくして完全なフラットデザインに */
-    box-shadow: none;
-  }
-  
-  .create-btn:hover {
-    /* ホバー時は背景色を少しグレーに */
-    background: #e6e6e6;
-    /* 浮き上がるエフェクトは削除 */
-    transform: none;
-  }
-  
-  .create-btn i {
-    font-size: 0.9rem;
-    transition: transform 0.2s ease;
-  }
-  
-  .create-btn:hover i {
-    transform: translateX(4px);
-  }
-  
-  /* ユーティリティ */
+
   .sp-only {
-    display: none;
+    display: block;
   }
-  
-  /* レスポンシブ */
-  @media (max-width: 768px) {
-    .hero-section {
-      min-height: 60vh;
-    }
-  
-    .sp-only {
-      display: block;
-    }
-  
-    h2 {
-      font-size: 1.75rem;
-      margin-bottom: 1rem;
-    }
-  
-    .editor-home-description {
-      font-size: 1rem;
-      margin-bottom: 2rem;
-    }
-  
-    .create-btn {
-      padding: 0.875rem 2.5rem;
-      width: 100%; /* スマホではボタンを幅いっぱいに */
-      justify-content: center;
-    }
+
+  h2 {
+    font-size: 1.2rem;
   }
-  </style>
+
+  .editor-home-description {
+    font-size: 0.7rem;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+}
+</style>
