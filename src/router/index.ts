@@ -12,22 +12,22 @@ import NotFound from "@/views/NotFound.vue";
 import BookReviewList from "@/views/BookReviewList.vue";
 import YouTuberList from "@/views/YouTuberList.vue";
 import AdminUsers from "@/views/AdminUsers.vue";
+import EditorHome from "@/views/EditorHome.vue";
+import MarkdownEditor from "@/views/MarkdownEditor.vue";
+
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: "/",
-      redirect: () => {
-        /**
-         * localStorage.getItemはWeb APIのメソッドで、localStorageから指定したキーの値を取得
-         */
-
-        // Laravel Sanctum の認証トークンでログイン状態を判定
-        // const isLoggedIn = localStorage.getItem("authToken") !== null;
-        // return isLoggedIn ? "/posts" : "/login";
-        return "/posts";
-      },
+      name: "editor-home",
+      component: EditorHome,
+    },
+    {
+      path: "/editor/:roomId",
+      name: "markdown-editor",
+      component: MarkdownEditor,
     },
     { path: "/login", name: "login", component: Login },
     { 

@@ -11,6 +11,10 @@
         </router-link>
         <nav class="nav-container">
           <div class="nav-links">
+            <router-link 
+              class="nav-link" 
+              :class="{ 'nav-link-active': route.path === '/' }"
+              to="/">共同エディタ</router-link>
             <!-- 投稿権限がある場合はドロップダウン -->
             <div v-if="canCreatePost" class="nav-dropdown">
               <span 
@@ -72,6 +76,10 @@
 
           <!-- モバイルメニュー -->
           <div v-if="isMenuOpen" class="mobile-menu">
+            <router-link 
+              class="mobile-menu-item" 
+              :class="{ 'mobile-menu-item-active': route.path === '/' || route.path.startsWith('/editor') }"
+              to="/" @click="closeMenu">共同エディタ</router-link>
             <router-link 
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/posts' }"
