@@ -205,7 +205,7 @@ const handleSubmit = async () => {
     successMessage.value = ''
     isSaving.value = true
 
-    // ファイルが選択されている場合はFormDataを使用
+    // ファイルが選択されている場合はContent-Typeをmultipart/form-dataに設定
     if (selectedFile.value) {
       const formData = new FormData()
       formData.append('name', form.name)

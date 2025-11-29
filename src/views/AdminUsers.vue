@@ -103,7 +103,7 @@
     processing.value = true;
     try {
       await adminApi.deleteUser(user.id);
-      await fetchUsers();
+      await fetchUsers(); // 削除後に一覧を更新
     } catch (e) {
       alert(e instanceof Error ? e.message : '削除に失敗しました');
     } finally {
@@ -117,7 +117,7 @@
     processing.value = true;
     try {
       await adminApi.restoreUser(user.id);
-      await fetchUsers();
+      await fetchUsers(); // 復元後に一覧を更新
     } catch (e) {
       alert(e instanceof Error ? e.message : '復元に失敗しました');
     } finally {
