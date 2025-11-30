@@ -122,6 +122,11 @@
     <div class="container">
       <router-view />
     </div>
+
+    <!-- Googleアドセンスをページ最下部に表示 -->
+    <div v-if="!isLocalhost" class="global-ad-container">
+      <GoogleAdsense ad-slot="7947018211" />
+    </div>
   </div>
 </template>
 
@@ -130,6 +135,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { authApi } from "./api/auth";
 import { userApi, type User, type Role } from "./api/user";
+import GoogleAdsense from "@/components/GoogleAdsense.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -272,6 +278,11 @@ const canCreatePost = computed(() => {
 const isAdmin = computed(() => {
   if (!isLoggedIn.value) return false;
   return userRoles.value.some((role) => role.name === "admin");
+});
+
+// localhostかどうかチェック（アドセンス表示制御用）
+const isLocalhost = computed(() => {
+  return typeof window !== 'undefined' && window.location.hostname === 'localhost';
 });
 
 // ルート変更時にログイン状態とロール情報を再チェック
@@ -576,5 +587,12 @@ header {
   max-width: 800px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+.global-ad-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  min-width: 300px;
 }
 </style>

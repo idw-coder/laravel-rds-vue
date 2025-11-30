@@ -55,10 +55,6 @@
       </button>
     </div>
 
-    <!-- Googleアドセンスをページ最下部に表示 -->
-    <div v-if="!isLocalhost && posts.length > 0" class="ad-container">
-      <GoogleAdsense ad-slot="7947018211" />
-    </div>
   </div>
 </template>
 
@@ -66,7 +62,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { postsApi, type Post } from '../api/posts'
-import GoogleAdsense from '@/components/GoogleAdsense.vue'
 
 const router = useRouter()
 const posts = ref<Post[]>([])
@@ -76,9 +71,6 @@ const itemsPerPage = 10 // 1ページあたりの表示件数
 const avatarErrors = ref<Set<number>>(new Set())
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
-const isLocalhost = computed(() => {
-  return typeof window !== 'undefined' && window.location.hostname === 'localhost'
-})
 
 // ページネーション計算
 const totalPages = computed(() => {
@@ -102,8 +94,6 @@ onMounted(async () => {
   try {
     isLoading.value = true
     posts.value = await postsApi.getAll()
-    // デバッグ用: isLocalhost の値を確認
-    console.log('isLocalhost:', isLocalhost.value, 'hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A')
   } finally {
     isLoading.value = false
   }
@@ -219,13 +209,6 @@ h3, p {
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
-}
-
-.ad-container {
-  margin: 2rem 0;
-  width: 100%;
-  min-width: 300px;
-  display: block;
 }
 
 .pagination {

@@ -108,10 +108,11 @@ h2 {
   border: none;
   cursor: pointer;
   line-height: 1.2;
+  transition: opacity 0.3s;
 }
 
 .create-btn:hover {
-  background: #f5f5f5;
+    opacity: 0.8;
 }
 
 .create-btn i {
@@ -121,7 +122,7 @@ h2 {
 /* レスポンシブ */
 @media (max-width: 768px) {
   .hero-section {
-    min-height: 80vh;
+    min-height: 75vh;
   }
 
   .hero-content {
@@ -141,7 +142,7 @@ h2 {
   }
 
   .editor-home-description {
-    font-size: 0.7rem;
+    /* font-size: 0.7rem; */
     flex-direction: column;
     gap: 0.3rem;
   }
