@@ -38,8 +38,6 @@
           <button @click="handleDelete" class="delete-btn">削除</button>
         </div>
 
-        <!-- Googleアドセンス -->
-        <GoogleAdsense v-if="!isLocalhost" ad-slot="7947018211" />
       </div>
     </div>
     <p v-else>読み込み中...</p>
@@ -49,7 +47,6 @@
   import { ref, onMounted, computed } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { postsApi, type Post } from '@/api/posts'
-  import GoogleAdsense from '@/components/GoogleAdsense.vue'
   
   const router = useRouter()
   const route = useRoute()
@@ -57,9 +54,6 @@
   const avatarError = ref(false)
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
-  const isLocalhost = computed(() => {
-    return typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  })
 
   // 現在のユーザーIDを取得
   const getCurrentUserId = (): number | null => {

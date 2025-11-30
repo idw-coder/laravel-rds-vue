@@ -145,17 +145,12 @@
       </div>
     </div>
 
-    <!-- Googleアドセンスをページ最下部に表示 -->
-    <div v-if="!isLocalhost" class="ad-container">
-      <GoogleAdsense ad-slot="7947018211" />
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { typingGameApi, type WordEntry, type CategoryData } from '@/api/typingGame'
-import GoogleAdsense from '@/components/GoogleAdsense.vue'
 
 type GameStatus = 'ready' | 'playing' | 'end'
 type InputStatus = 'normal' | 'miss' | 'correct'
@@ -184,9 +179,6 @@ const inputRef = ref<HTMLElement | null>(null)
 let gameTimerInterval: number | null = null
 let wordTimerInterval: number | null = null
 
-const isLocalhost = computed(() => {
-  return typeof window !== 'undefined' && window.location.hostname === 'localhost'
-})
 
 // 現在の単語情報
 const currentWord = computed(() => shuffledList.value[currentWordIndex.value])
@@ -770,10 +762,4 @@ onMounted(() => {
   }
 }
 
-.ad-container {
-  margin: 2rem 0;
-  width: 100%;
-  min-width: 300px;
-  display: block;
-}
 </style>

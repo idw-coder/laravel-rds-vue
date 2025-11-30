@@ -32,8 +32,24 @@ const props = withDefaults(defineProps<Props>(), {
 const containerRef = ref<HTMLElement | null>(null)
 const insRef = ref<HTMLElement | null>(null)
 
+// 初期化済みのスロットを追跡（グローバル）
+const initializedSlots = new Set<string>()
+
 onMounted(async () => {
   await nextTick()
+  
+  // すでに初期化済みの場合はスキップ
+  const slotKey = `${props.adClient}-${props.adSlot}`
+  if (initializedSlots.has(slotKey)) {
+    console.log('AdSense already initialized for slot:', props.adSlot)
+    return
+  }
+  
+  // ins要素がすでに初期化済みかチェック（data-ad-status属性）
+  if (insRef.value?.getAttribute('data-ad-status')) {
+    console.log('AdSense ins element already has status:', insRef.value.getAttribute('data-ad-status'))
+    return
+  }
   
   // Google AdSense スクリプトの読み込みを待つ
   const waitForAdSenseScript = () => {
@@ -71,15 +87,9 @@ onMounted(async () => {
         if (insElement && containerElement) {
           // getBoundingClientRect で実際のサイズを確認
           const containerRect = containerElement.getBoundingClientRect()
-          const insRect = insElement.getBoundingClientRect()
           
           // コンテナの幅が300px以上あることを確認（広告の最小幅）
           if (containerRect.width >= 300 || containerElement.offsetWidth >= 300) {
-            console.log('AdSense element size confirmed:', {
-              containerWidth: containerRect.width,
-              containerOffsetWidth: containerElement.offsetWidth,
-              insWidth: insRect.width
-            })
             resolve()
             return
           }
@@ -100,17 +110,22 @@ onMounted(async () => {
   await waitForElementSize()
   
   // さらに少し待機してから初期化（レイアウトが完全に確定するまで）
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise(resolve => setTimeout(resolve, 300))
   
   // 再度サイズを確認
   if (containerRef.value) {
     const finalWidth = containerRef.value.getBoundingClientRect().width
-    console.log('Final container width before init:', finalWidth)
     
     if (finalWidth === 0) {
       console.error('Container width is still 0, cannot initialize AdSense')
       return
     }
+  }
+  
+  // 初期化前に再度チェック（非同期処理中に他で初期化された可能性）
+  if (insRef.value?.getAttribute('data-ad-status')) {
+    console.log('AdSense was initialized during wait')
+    return
   }
   
   try {
@@ -123,7 +138,10 @@ onMounted(async () => {
     // 広告を初期化
     ;(window as any).adsbygoogle.push({})
     
-    console.log('AdSense initialized successfully')
+    // 初期化済みとしてマーク
+    initializedSlots.add(slotKey)
+    
+    console.log('AdSense initialized successfully for slot:', props.adSlot)
   } catch (e) {
     console.error('AdSense error:', e)
   }
