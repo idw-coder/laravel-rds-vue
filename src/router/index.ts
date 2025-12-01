@@ -25,7 +25,7 @@ const router = createRouter({
       component: EditorHome,
     },
     {
-      path: "/editor/:roomId",
+      path: "/shared-doc/:roomId",
       name: "markdown-editor",
       component: MarkdownEditor,
     },

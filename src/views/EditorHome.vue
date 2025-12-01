@@ -25,7 +25,7 @@ const router = useRouter();
 
 const createRoom = () => {
   const roomId = crypto.randomUUID();
-  router.push(`/editor/${roomId}`);
+  router.push(`/shared-doc/${roomId}`);
 };
 </script>
 
@@ -130,7 +130,7 @@ h2 {
   }
 
   .hero-overlay {
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
   }
 
   .sp-only {
