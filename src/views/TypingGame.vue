@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { typingGameApi, type WordEntry, type CategoryData } from '@/api/typingGame'
 
 type GameStatus = 'ready' | 'playing' | 'end'

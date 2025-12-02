@@ -5,6 +5,7 @@ import mockDataJavascript from "./mockData-javascript.json";
 import mockDataLaravel from "./mockData-laravel.json";
 import mockDataAichat from "./mockData-aichat.json";
 import mockDataSql from "./mockData-sql.json";
+import mockDataSvn from "./mockData-svn.json";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api";
 
@@ -68,6 +69,7 @@ function getMockCategories(): Category[] {
     { slug: "laravel", name: "Laravel" },
     { slug: "aichat", name: "AIチャット" },
     { slug: "sql", name: "SQL" },
+    { slug: "svn", name: "SVN" },
   ];
 }
 
@@ -80,6 +82,7 @@ function getMockCommands(categorySlug: string): WordEntry[] {
     laravel: mockDataLaravel as WordEntry[],
     aichat: mockDataAichat as WordEntry[],
     sql: mockDataSql as WordEntry[],
+    svn: mockDataSvn as WordEntry[],
   };
   return mockDataMap[categorySlug] || [];
 }

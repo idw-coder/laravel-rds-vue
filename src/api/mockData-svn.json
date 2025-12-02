@@ -1,0 +1,23 @@
+[
+  { "command": "svn checkout", "description": "リポジトリをチェックアウトする" },
+  { "command": "svn update", "description": "作業コピーを更新する" },
+  { "command": "svn commit -m", "description": "変更をコミットする" },
+  { "command": "svn add", "description": "ファイルをバージョン管理に追加する" },
+  { "command": "svn delete", "description": "ファイルを削除する" },
+  { "command": "svn status", "description": "作業コピーの状態を確認する" },
+  { "command": "svn diff", "description": "差分を表示する" },
+  { "command": "svn log", "description": "コミット履歴を表示する" },
+  { "command": "svn info", "description": "リポジトリ情報を表示する" },
+  { "command": "svn revert", "description": "変更を元に戻す" },
+  { "command": "svn merge", "description": "ブランチをマージする" },
+  { "command": "svn switch", "description": "作業コピーのURLを切り替える" },
+  { "command": "svn copy", "description": "ブランチやタグを作成する" },
+  { "command": "svn move", "description": "ファイルを移動・リネームする" },
+  { "command": "svn export", "description": "管理情報なしでエクスポートする" },
+  { "command": "svn cleanup", "description": "作業コピーをクリーンアップする" },
+  { "command": "svn resolve", "description": "競合を解決済みにする" },
+  { "command": "svn lock", "description": "ファイルをロックする" },
+  { "command": "svn unlock", "description": "ロックを解除する" },
+  { "command": "svn propset", "description": "プロパティを設定する" }
+]
+

@@ -7,9 +7,7 @@
       <div class="post-content">
         <h3>{{ post.title }}</h3>
   
-        <div class="post-body">
-          <p>{{ post.content }}</p>
-        </div>
+        <div class="post-body markdown-content" v-html="parsedContent"></div>
   
         <div class="post-meta">
           <div class="post-meta-left">
@@ -46,6 +44,7 @@
   <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
+  import { marked } from 'marked'
   import { postsApi, type Post } from '@/api/posts'
   
   const router = useRouter()
@@ -78,6 +77,12 @@
     const currentUserId = getCurrentUserId()
     const postUserId = getPostUserId(post.value)
     return currentUserId !== null && postUserId !== null && currentUserId === postUserId
+  })
+
+  // マークダウンをHTMLに変換
+  const parsedContent = computed(() => {
+    if (!post.value?.content) return ''
+    return marked(post.value.content)
   })
   
   onMounted(async () => {
@@ -141,6 +146,76 @@
   
   .post-body {
     line-height: 1.6;
+  }
+
+  .markdown-content :deep(h1),
+  .markdown-content :deep(h2),
+  .markdown-content :deep(h3) {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .markdown-content :deep(h1):first-child,
+  .markdown-content :deep(h2):first-child,
+  .markdown-content :deep(h3):first-child {
+    margin-top: 0;
+  }
+
+  .markdown-content :deep(p) {
+    margin: 0.5rem 0;
+  }
+
+  .markdown-content :deep(code) {
+    background: #e8e8e8;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.2rem;
+    font-size: 0.85rem;
+  }
+
+  .markdown-content :deep(pre) {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+  }
+
+  .markdown-content :deep(pre code) {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+
+  .markdown-content :deep(ul),
+  .markdown-content :deep(ol) {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  .markdown-content :deep(blockquote) {
+    border-left: 3px solid #41B883;
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    color: #666;
+  }
+
+  .markdown-content :deep(a) {
+    color: #41B883;
+  }
+
+  .markdown-content :deep(table) {
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+  }
+
+  .markdown-content :deep(th),
+  .markdown-content :deep(td) {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+  }
+
+  .markdown-content :deep(th) {
+    background: #f5f5f5;
   }
   
   h3, p {

@@ -8,7 +8,7 @@
     <ul v-if="displayedPosts.length">
       <li v-for="post in displayedPosts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
         <h3>{{ post.title }}</h3>
-        <p>{{ post.content }}</p>
+        <p class="post-preview">{{ stripMarkdown(post.content) }}</p>
 
         <div class="post-meta">
           <div class="post-meta-left">
@@ -62,6 +62,28 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { postsApi, type Post } from '../api/posts'
+
+// マークダウン記号を除去してプレーンテキストに変換（一覧プレビュー用）
+const stripMarkdown = (text: string, maxLength: number = 100): string => {
+  if (!text) return ''
+  // マークダウン記号を除去
+  const plainText = text
+    .replace(/#{1,6}\s?/g, '')           // 見出し
+    .replace(/\*\*|__/g, '')              // 太字
+    .replace(/\*|_/g, '')                 // 斜体
+    .replace(/`{1,3}[^`]*`{1,3}/g, '')    // コード
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // リンク
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '') // 画像
+    .replace(/>\s?/g, '')                 // 引用
+    .replace(/[-*+]\s/g, '')              // リスト
+    .replace(/\d+\.\s/g, '')              // 番号付きリスト
+    .replace(/\n+/g, ' ')                 // 改行をスペースに
+    .trim()
+  
+  return plainText.length > maxLength 
+    ? plainText.substring(0, maxLength) + '...' 
+    : plainText
+}
 
 const router = useRouter()
 const posts = ref<Post[]>([])
@@ -154,6 +176,12 @@ h2 {
 
 h3, p {
   margin: 0;
+}
+
+.post-preview {
+  color: #666;
+  font-size: 0.875rem;
+  line-height: 1.4;
 }
 
 .post-meta {

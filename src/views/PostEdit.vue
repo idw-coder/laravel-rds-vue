@@ -6,9 +6,16 @@
         <label>タイトル</label>
         <input v-model="form.title" type="text" required />
       </div>
-      <div>
-        <label>内容</label>
-        <textarea v-model="form.content" required></textarea>
+      <div class="content-section">
+        <label>内容（Markdown対応）</label>
+        <div class="content-editor">
+          <textarea 
+            v-model="form.content" 
+            required 
+            placeholder="Markdown を入力..."
+          ></textarea>
+          <div class="content-preview" v-html="parsedContent"></div>
+        </div>
       </div>
       <div>
         <label>ステータス</label>
@@ -28,8 +35,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { marked } from 'marked'
 import { postsApi, type Post } from '../api/posts'
 
 const router = useRouter()
@@ -39,6 +47,10 @@ const form = reactive({
   title: '',
   content: '',
   status: 'draft'
+})
+
+const parsedContent = computed(() => {
+  return marked(form.content)
 })
 
 // 現在のユーザーIDを取得
@@ -132,7 +144,91 @@ input, textarea, select {
 }
 
 textarea {
-  min-height: 100px;
+  min-height: 200px;
+  resize: vertical;
+}
+
+.content-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.content-editor {
+  display: flex;
+  gap: 1rem;
+}
+
+.content-editor textarea {
+  flex: 1;
+  font-family: 'Noto Sans JP', monospace;
+  font-size: 0.875rem;
+}
+
+.content-preview {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  background: #f9f9f9;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+}
+
+.content-preview :deep(h1),
+.content-preview :deep(h2),
+.content-preview :deep(h3) {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.content-preview :deep(p) {
+  margin: 0.5rem 0;
+}
+
+.content-preview :deep(code) {
+  background: #e8e8e8;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.content-preview :deep(pre) {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+}
+
+.content-preview :deep(pre code) {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.content-preview :deep(ul),
+.content-preview :deep(ol) {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.content-preview :deep(blockquote) {
+  border-left: 3px solid #41B883;
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .content-editor {
+    flex-direction: column;
+  }
+
+  .content-preview {
+    min-height: 150px;
+  }
 }
 
 .status-select {
