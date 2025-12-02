@@ -1,5 +1,5 @@
 <template>
-  <div class="post-edit" v-if="form.title">
+  <div class="post-edit" v-if="isLoaded">
     <h2>投稿を編集</h2>
     <form @submit.prevent="handleSubmit">
       <div>
@@ -49,6 +49,8 @@ const form = reactive({
   status: 'draft'
 })
 
+const isLoaded = ref(false)
+
 const parsedContent = computed(() => {
   return marked(form.content)
 })
@@ -88,6 +90,7 @@ onMounted(async () => {
     form.title = post.title
     form.content = post.content
     form.status = post.status
+    isLoaded.value = true
   }
 })
 
