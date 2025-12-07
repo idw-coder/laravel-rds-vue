@@ -48,6 +48,21 @@
           </template>
         </div>
         <div class="stats-right">
+          <!-- ゲーム設定（準備画面のみ表示） -->
+          <template v-if="gameStatus === 'ready'">
+            <div class="compact-setting">
+              <i class="fas fa-clock"></i>
+              <select v-model="selectedGameTime" class="setting-select">
+                <option v-for="time in gameTimeOptions" :key="time" :value="time">{{ time }}秒</option>
+              </select>
+            </div>
+            <div class="compact-setting">
+              <i class="fas fa-stopwatch"></i>
+              <select v-model="selectedWordTimeLimit" class="setting-select">
+                <option v-for="time in wordTimeLimitOptions" :key="time" :value="time">{{ time }}秒</option>
+              </select>
+            </div>
+          </template>
           <span class="timer-label">
             <i class="fas fa-clock"></i>
             残り時間
@@ -68,6 +83,7 @@
               <span class="category-name">{{ categories[selectedCategory]?.name }}</span>で開始します
             </template>
           </p>
+          
           <button
             @click="startGame"
             :disabled="selectedCategory === 'none' || !categories[selectedCategory]?.data.length"
@@ -158,6 +174,12 @@ type InputStatus = 'normal' | 'miss' | 'correct'
 const DEFAULT_GAME_TIME = 120
 const WORD_TIME_LIMIT = 10
 
+// ゲーム設定
+const gameTimeOptions = [60, 90, 120, 180, 300]
+const wordTimeLimitOptions = [5, 8, 10, 15, 20]
+const selectedGameTime = ref(DEFAULT_GAME_TIME)
+const selectedWordTimeLimit = ref(WORD_TIME_LIMIT)
+
 // 状態管理
 const categories = ref<{ [key: string]: CategoryData }>({
   none: { name: 'None', data: [] }
@@ -168,12 +190,12 @@ const shuffledList = ref<WordEntry[]>([])
 const currentWordIndex = ref(0)
 const typed = ref('')
 const inputStatus = ref<InputStatus>('normal')
-const timeLeft = ref(DEFAULT_GAME_TIME)
+const timeLeft = ref(selectedGameTime.value)
 const score = ref(0)
 const missCount = ref(0)
 const combo = ref(0)
 const maxCombo = ref(0)
-const wordTimeLeft = ref(WORD_TIME_LIMIT)
+const wordTimeLeft = ref(selectedWordTimeLimit.value)
 
 const inputRef = ref<HTMLElement | null>(null)
 let gameTimerInterval: number | null = null
@@ -184,7 +206,7 @@ let wordTimerInterval: number | null = null
 const currentWord = computed(() => shuffledList.value[currentWordIndex.value])
 const currentCommand = computed(() => currentWord.value?.command || '')
 const currentDescription = computed(() => currentWord.value?.description || '')
-const wordTimePercent = computed(() => (wordTimeLeft.value / WORD_TIME_LIMIT) * 100)
+const wordTimePercent = computed(() => (wordTimeLeft.value / selectedWordTimeLimit.value) * 100)
 
 // カテゴリーの色を取得
 const getCategoryColorClass = (slug: string, isSelected: boolean): string => {
@@ -258,7 +280,7 @@ const shuffleArray = <T>(array: T[]): T[] => {
 
 // 単語タイマーをリセット
 const resetWordTimer = () => {
-  wordTimeLeft.value = WORD_TIME_LIMIT
+  wordTimeLeft.value = selectedWordTimeLimit.value
 }
 
 // 次の単語へ
@@ -319,8 +341,8 @@ const resetGame = (status: GameStatus = 'ready', category: string = 'none') => {
   gameStatus.value = status
   currentWordIndex.value = 0
   typed.value = ''
-  timeLeft.value = DEFAULT_GAME_TIME
-  wordTimeLeft.value = WORD_TIME_LIMIT
+  timeLeft.value = selectedGameTime.value
+  wordTimeLeft.value = selectedWordTimeLimit.value
   
   if (status === 'ready') {
     shuffledList.value = []
@@ -589,6 +611,32 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+}
+
+.compact-setting {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.compact-setting i {
+  font-size: 0.7rem;
+}
+
+.setting-select {
+  padding: 0.15rem 0.25rem;
+  font-size: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.setting-select:focus {
+  border-color: #35495e;
 }
 
 .ready-message {
