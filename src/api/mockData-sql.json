@@ -32,5 +32,7 @@
   { "command": "show variables like 'time_zone%';", "description": "【MySQL】タイムゾーン設定を確認する" },
   { "command": "show variables like 'character%';", "description": "【MySQL】文字セット設定を確認する" },
   { "command": "mysql --version", "description": "【bash】MySQLのバージョンを確認する" },
-  { "command": "mysql -u root -ppassword", "description": "【bash】MySQLにrootでログインする" }
+  { "command": "mysql -u root -ppassword", "description": "【bash】MySQLにrootでログインする" },
+  { "command": "mysqldump -u root -ppassword laravel > backup_$(date +%Y%m%d).sql", "description": "【bash】laravelデータベースをバックアップする（MySQLコンテナ内で実行）" },
+  { "command": "show databases;", "description": "【MySQL】データベース一覧を表示" }
 ]
