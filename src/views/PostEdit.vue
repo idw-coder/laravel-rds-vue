@@ -55,21 +55,38 @@ const parsedContent = computed(() => {
   return marked(form.content)
 })
 
-// 現在のユーザーIDを取得
-const getCurrentUserId = (): number | null => {
+// 現在のユーザー情報を取得
+const getCurrentUser = (): { id: number; roles?: string[] } | null => {
   try {
     const userStr = localStorage.getItem('user')
     if (!userStr) return null
-    const user = JSON.parse(userStr)
-    return user?.id || null
+    return JSON.parse(userStr)
   } catch {
     return null
   }
 }
 
+// 現在のユーザーがadminロールを持っているかチェック
+const isAdmin = (): boolean => {
+  const user = getCurrentUser()
+  if (!user?.roles) return false
+  return user.roles.includes('admin')
+}
+
 // 投稿のユーザーIDを取得
 const getPostUserId = (post: Post): number | null => {
   return post.user_id || post.user?.id || null
+}
+
+// 投稿を管理できるかチェック（所有者またはadmin）
+const canManagePost = (post: Post): boolean => {
+  // adminは全投稿を管理可能
+  if (isAdmin()) return true
+  
+  // 所有者は自分の投稿を管理可能
+  const currentUser = getCurrentUser()
+  const postUserId = getPostUserId(post)
+  return currentUser?.id !== undefined && postUserId !== null && currentUser.id === postUserId
 }
 
 // 編集対象を取得
@@ -79,10 +96,8 @@ onMounted(async () => {
   const post = posts.find(p => p.id === id)
   
   if (post) {
-    // ユーザーIDが異なる場合はリダイレクト
-    const currentUserId = getCurrentUserId()
-    const postUserId = getPostUserId(post)
-    if (currentUserId === null || postUserId === null || currentUserId !== postUserId) {
+    // 管理権限がない場合はリダイレクト
+    if (!canManagePost(post)) {
       router.push('/posts')
       return
     }

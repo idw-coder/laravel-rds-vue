@@ -31,7 +31,7 @@
           </div>
         </div>
   
-        <div class="button-group" v-if="isOwner">
+        <div class="button-group" v-if="canManage">
           <button @click="goToEdit" class="edit-btn">編集</button>
           <button @click="handleDelete" class="delete-btn">削除</button>
         </div>
@@ -54,16 +54,22 @@
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
 
-  // 現在のユーザーIDを取得
-  const getCurrentUserId = (): number | null => {
+  // 現在のユーザー情報を取得
+  const getCurrentUser = (): { id: number; roles?: string[] } | null => {
     try {
       const userStr = localStorage.getItem('user')
       if (!userStr) return null
-      const user = JSON.parse(userStr)
-      return user?.id || null
+      return JSON.parse(userStr)
     } catch {
       return null
     }
+  }
+
+  // 現在のユーザーがadminロールを持っているかチェック
+  const isAdmin = (): boolean => {
+    const user = getCurrentUser()
+    if (!user?.roles) return false
+    return user.roles.includes('admin')
   }
 
   // 投稿のユーザーIDを取得
@@ -71,12 +77,17 @@
     return post.user_id || post.user?.id || null
   }
 
-  // 現在のユーザーが投稿の所有者かどうか
-  const isOwner = computed(() => {
+  // 現在のユーザーが投稿を管理できるかどうか（所有者またはadmin）
+  const canManage = computed(() => {
     if (!post.value) return false
-    const currentUserId = getCurrentUserId()
+    
+    // adminは全投稿を管理可能
+    if (isAdmin()) return true
+    
+    // 所有者は自分の投稿を管理可能
+    const currentUser = getCurrentUser()
     const postUserId = getPostUserId(post.value)
-    return currentUserId !== null && postUserId !== null && currentUserId === postUserId
+    return currentUser?.id !== undefined && postUserId !== null && currentUser.id === postUserId
   })
 
   // マークダウンをHTMLに変換
