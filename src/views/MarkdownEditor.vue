@@ -1,63 +1,85 @@
 <template>
   <div class="editor-container">
-    <div class="editor-header">
-      <span class="room-id">Room: {{ roomId }}</span>
-      <button @click="saveDocument" :disabled="isSaving" class="save-btn">
-        {{ isSaving ? '保存中...' : '保存' }}
-      </button>
-      <span v-if="saveMessage" class="save-message">{{ saveMessage }}</span>
-    </div>
-    <div class="editor-body">
+    <h1>共同編集エディタ</h1>
+    <p>ルームID: {{ roomId }}</p>
+
+    <div class="editor-layout">
+      <!-- Markdown入力エリア -->
       <textarea
         v-model="content"
-        class="editor-input"
-        placeholder="Markdown を入力..."
-      ></textarea>
-      <div class="editor-preview" v-html="parsedContent"></div>
+        class="markdown-input"
+        placeholder="Markdownを入力..."
+      />
+
+      <!-- プレビューエリア -->
+      <div class="markdown-preview" v-html="parsedContent" />
     </div>
+
+    <button @click="handleSave" :disabled="isSaving" class="save-button">
+      {{ isSaving ? '保存中...' : '保存' }}
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
-import { documentApi } from '@/api/sharedDocument'
+import { getDocument, updateDocument } from '@/api/sharedDocument'
+import echo from '@/api/echo'
 
 const route = useRoute()
 const roomId = route.params.roomId as string
 
 const content = ref('')
 const isSaving = ref(false)
-const saveMessage = ref('')
 
+// Markdownをパースしてプレビュー表示
 const parsedContent = computed(() => {
   return marked(content.value)
 })
 
-// 初回読み込み
+// WebSocketでリアルタイム更新を受信
+// 他のユーザーが編集した内容をリアルタイムで反映
+let channel: any = null
+
 onMounted(async () => {
+  // 初期データを取得
   try {
-    const doc = await documentApi.get(roomId)
+    const doc = await getDocument(roomId)
     content.value = doc.content || ''
   } catch (error) {
     console.error('Failed to load document:', error)
   }
+
+  // WebSocketチャンネルに接続
+  // document.{roomId} チャンネルをリッスン
+  channel = echo.channel(`document.${roomId}`)
+
+  // document.updated イベントを受信したら内容を更新
+  channel.listen('.document.updated', (data: { roomId: string; content: string }) => {
+    console.log('WebSocket受信:', data)
+    content.value = data.content
+  })
 })
 
-// 保存
-const saveDocument = async () => {
+onUnmounted(() => {
+  // コンポーネント破棄時にチャンネルから切断
+  if (channel) {
+    echo.leave(`document.${roomId}`)
+  }
+})
+
+// 保存ボタン押下時
+// DBに保存 → WebSocketで他のユーザーに通知
+const handleSave = async () => {
   isSaving.value = true
-  saveMessage.value = ''
   try {
-    await documentApi.save(roomId, content.value)
-    saveMessage.value = '保存しました'
-    setTimeout(() => {
-      saveMessage.value = ''
-    }, 2000)
+    await updateDocument(roomId, content.value)
+    alert('保存しました')
   } catch (error) {
     console.error('Failed to save document:', error)
-    saveMessage.value = '保存に失敗しました'
+    alert('保存に失敗しました')
   } finally {
     isSaving.value = false
   }
@@ -66,98 +88,48 @@ const saveDocument = async () => {
 
 <style scoped>
 .editor-container {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 120px);
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.editor-header {
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
 }
 
-.room-id {
-  font-size: 0.8rem;
-  color: #666;
-  background: #f9f9f9;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+.markdown-input {
+  width: 100%;
+  min-height: 400px;
+  padding: 10px;
   border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  resize: vertical;
 }
 
-.save-btn {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
-  background-color: #35495e;
+.markdown-preview {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
+  min-height: 400px;
+  overflow-y: auto;
+}
+
+.save-button {
+  padding: 10px 20px;
+  background: #42b983;
   color: white;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.save-btn:hover {
-  background-color: #13283c;
-}
-
-.save-btn:disabled {
-  background-color: #999;
+.save-button:disabled {
+  background: #ccc;
   cursor: not-allowed;
-}
-
-.save-message {
-  font-size: 0.8rem;
-  color: #27ae60;
-}
-
-.editor-body {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-  min-height: 0;
-}
-
-.editor-input {
-  flex: 1;
-  padding: 1rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  resize: none;
-  color: #35495e;
-}
-
-.editor-input:focus {
-  outline: none;
-  border-color: #35495e;
-}
-
-.editor-input::placeholder {
-  color: #999;
-}
-
-.editor-preview {
-  flex: 1;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  overflow-y: auto;
-  background: #f9f9f9;
-  color: #35495e;
-  font-size: 0.8rem;
-}
-
-@media (max-width: 768px) {
-  .editor-body {
-    flex-direction: column;
-  }
-
-  .editor-input,
-  .editor-preview {
-    flex: none;
-    height: 40vh;
-  }
 }
 </style>

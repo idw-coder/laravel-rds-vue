@@ -30,3 +30,12 @@ export const documentApi = {
     return response.json();
   },
 };
+
+// 個別エクスポート関数（WebSocket対応版で使用）
+export const getDocument = (roomId: string): Promise<SharedDocument> => {
+  return documentApi.get(roomId);
+};
+
+export const updateDocument = (roomId: string, content: string): Promise<SharedDocument> => {
+  return documentApi.save(roomId, content);
+};
