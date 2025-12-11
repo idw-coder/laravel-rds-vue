@@ -5,6 +5,38 @@
       <!-- <button @click="goToCreate" class="create-btn">新規作成</button> -->
     </div>
 
+    <!-- 検索フィルター -->
+    <div class="search-section">
+      <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          placeholder="タイトル・内容で検索..."
+          class="search-input"
+          @input="currentPage = 1"
+        />
+        <button 
+          v-if="searchQuery" 
+          @click="clearSearch" 
+          class="clear-btn"
+          title="検索をクリア"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="filter-options">
+        <select v-model="statusFilter" class="status-filter" @change="currentPage = 1">
+          <option value="">すべてのステータス</option>
+          <option value="published">公開</option>
+          <option value="draft">下書き</option>
+        </select>
+      </div>
+      <div v-if="searchQuery || statusFilter" class="search-result-info">
+        {{ filteredPosts.length }}件の投稿が見つかりました
+      </div>
+    </div>
+
     <ul v-if="displayedPosts.length">
       <li v-for="post in displayedPosts" :key="post.id" @click="goToDetail(post.id!)" class="post-item">
         <h3>{{ post.title }}</h3>
@@ -93,16 +125,47 @@ const itemsPerPage = 10 // 1ページあたりの表示件数
 const avatarErrors = ref<Set<number>>(new Set())
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost/api"
 
+// 検索用
+const searchQuery = ref('')
+const statusFilter = ref('')
 
-// ページネーション計算
+// 検索をクリア
+const clearSearch = () => {
+  searchQuery.value = ''
+  currentPage.value = 1
+}
+
+// 検索・フィルター後の投稿
+const filteredPosts = computed(() => {
+  let result = posts.value
+
+  // キーワード検索（タイトルと内容）
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    result = result.filter(post => 
+      post.title.toLowerCase().includes(query) ||
+      post.content.toLowerCase().includes(query) ||
+      (post.user?.name && post.user.name.toLowerCase().includes(query))
+    )
+  }
+
+  // ステータスフィルター
+  if (statusFilter.value) {
+    result = result.filter(post => post.status === statusFilter.value)
+  }
+
+  return result
+})
+
+// ページネーション計算（フィルター後のデータに対して）
 const totalPages = computed(() => {
-  return Math.ceil(posts.value.length / itemsPerPage)
+  return Math.ceil(filteredPosts.value.length / itemsPerPage)
 })
 
 const displayedPosts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
-  return posts.value.slice(start, end)
+  return filteredPosts.value.slice(start, end)
 })
 
 // 日付フォーマット
@@ -267,5 +330,104 @@ h3, p {
 .page-info {
   font-size: 0.9rem;
   color: #666;
+}
+
+/* 検索セクション */
+.search-section {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #999;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 2.25rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #42b983;
+  box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
+}
+
+.search-input::placeholder {
+  color: #aaa;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.clear-btn:hover {
+  color: #666;
+  background-color: #f0f0f0;
+}
+
+.filter-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-filter {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  background-color: white;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.status-filter:focus {
+  outline: none;
+  border-color: #42b983;
+}
+
+.search-result-info {
+  font-size: 0.85rem;
+  color: #666;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .search-section {
+    gap: 0.5rem;
+  }
+  
+  .filter-options {
+    flex-direction: column;
+  }
+  
+  .status-filter {
+    width: 100%;
+  }
 }
 </style>
