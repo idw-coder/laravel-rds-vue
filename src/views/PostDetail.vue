@@ -42,9 +42,10 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, computed } from 'vue'
+  import { ref, onMounted, computed, watch, nextTick } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { marked } from 'marked'
+  import mermaid from 'mermaid'
   import { postsApi, type Post } from '@/api/posts'
   
   const router = useRouter()
@@ -93,13 +94,31 @@
   // マークダウンをHTMLに変換
   const parsedContent = computed(() => {
     if (!post.value?.content) return ''
-    return marked(post.value.content)
+    const html = marked.parse(post.value.content) as string
+    // mermaidコードブロックを検出して変換
+    return html.replace(
+      /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
+      '<div class="mermaid">$1</div>'
+    )
+  })
+
+  // Mermaidを初期化
+  mermaid.initialize({ startOnLoad: false })
+
+  // parsedContentが変更されたときにMermaidを再実行
+  watch(parsedContent, async () => {
+    await nextTick()
+    mermaid.run()
   })
   
   onMounted(async () => {
     try {
       const id = Number(route.params.id)
       post.value = await postsApi.getById(id)
+      
+      // 初期レンダリング後にMermaidを実行
+      await nextTick()
+      mermaid.run()
     } catch (error: any) {
       console.error('投稿の取得に失敗しました:', error)
       if (error.status === 403) {
@@ -227,6 +246,13 @@
 
   .markdown-content :deep(th) {
     background: #f5f5f5;
+  }
+
+  .markdown-content :deep(.mermaid) {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin: 0.5rem 0;
   }
   
   h3, p {

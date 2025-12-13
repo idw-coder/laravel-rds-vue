@@ -35,9 +35,10 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed } from 'vue'
+import { reactive, ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { marked } from 'marked'
+import mermaid from 'mermaid'
 import { postsApi, type Post } from '../api/posts'
 
 const router = useRouter()
@@ -52,7 +53,12 @@ const form = reactive({
 const isLoaded = ref(false)
 
 const parsedContent = computed(() => {
-  return marked(form.content)
+  const html = marked.parse(form.content) as string
+  // mermaidコードブロックを検出して変換
+  return html.replace(
+    /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
+    '<div class="mermaid">$1</div>'
+  )
 })
 
 // 現在のユーザー情報を取得
@@ -89,6 +95,15 @@ const canManagePost = (post: Post): boolean => {
   return currentUser?.id !== undefined && postUserId !== null && currentUser.id === postUserId
 }
 
+// Mermaidを初期化
+mermaid.initialize({ startOnLoad: false })
+
+// parsedContentが変更されたときにMermaidを再実行
+watch(parsedContent, async () => {
+  await nextTick()
+  mermaid.run()
+})
+
 // 編集対象を取得
 onMounted(async () => {
   const id = Number(route.params.id)
@@ -106,6 +121,10 @@ onMounted(async () => {
     form.content = post.content
     form.status = post.status
     isLoaded.value = true
+    
+    // 初期レンダリング後にMermaidを実行
+    await nextTick()
+    mermaid.run()
   }
 })
 
@@ -237,6 +256,13 @@ textarea {
   margin: 0.5rem 0;
   padding-left: 1rem;
   color: #666;
+}
+
+.content-preview :deep(.mermaid) {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0;
 }
 
 @media (max-width: 768px) {

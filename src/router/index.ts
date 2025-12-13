@@ -13,7 +13,7 @@ import BookReviewList from "@/views/BookReviewList.vue";
 import YouTuberList from "@/views/YouTuberList.vue";
 import AdminUsers from "@/views/AdminUsers.vue";
 import EditorHome from "@/views/EditorHome.vue";
-import MarkdownEditor from "@/views/MarkdownEditor.vue";
+import SharedDocument from "@/views/SharedDocument.vue";
 
 
 const router = createRouter({
@@ -26,8 +26,8 @@ const router = createRouter({
     },
     {
       path: "/shared-doc/:roomId",
-      name: "markdown-editor",
-      component: MarkdownEditor,
+      name: "shared-document",
+      component: SharedDocument,
     },
     { path: "/login", name: "login", component: Login },
     { 
