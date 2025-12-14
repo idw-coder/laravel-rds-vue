@@ -83,4 +83,46 @@ export const postsApi = {
     }
     return response.json();
   },
+
+  // 画像アップロード
+  async uploadImage(file: File): Promise<{ url: string; path: string }> {
+    // ファイルサイズチェック（5MB）
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new Error('画像サイズは5MB以下にしてください');
+    }
+
+    // 画像形式チェック
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      throw new Error('画像ファイルのみアップロード可能です（JPEG、PNG、GIF、WebP）');
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetchWithAuth(`${API_BASE}/posts/images`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      let errorMessage = '画像のアップロードに失敗しました';
+      
+      if (response.status === 401) {
+        errorMessage = '認証エラーが発生しました。再度ログインしてください';
+      } else if (response.status === 403) {
+        errorMessage = '画像をアップロードする権限がありません（paidまたはadminロールが必要です）';
+      } else if (response.status === 422) {
+        errorMessage = errorData.message || 'バリデーションエラーが発生しました';
+      }
+      
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    return response.json();
+  },
 };
