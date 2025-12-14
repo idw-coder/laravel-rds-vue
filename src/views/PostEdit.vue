@@ -39,7 +39,24 @@
             required 
             placeholder="Markdown を入力..."
           ></textarea>
-          <div class="content-preview" v-html="parsedContent"></div>
+          <div class="content-preview-wrapper">
+            <div class="content-preview" v-html="parsedContent"></div>
+            <div v-if="extractedImages.length > 0" class="image-list">
+              <h4>アップロード済み画像</h4>
+              <div class="image-items">
+                <div v-for="imageUrl in extractedImages" :key="imageUrl" class="image-item">
+                  <img :src="imageUrl" alt="Preview" class="image-thumbnail" />
+                  <button 
+                    @click="deleteImage(imageUrl)" 
+                    class="delete-image-btn"
+                    type="button"
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div>
@@ -49,7 +66,7 @@
           <option value="published">公開</option>
         </select>
       </div>
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p v-if="errorMessage" :class="errorMessage.includes('削除しました') ? 'success' : 'error'">{{ errorMessage }}</p>
       <div class="button-group">
         <button type="submit">更新</button>
         <button type="button" @click="goBack">キャンセル</button>
@@ -88,6 +105,22 @@ const parsedContent = computed(() => {
     /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
     '<div class="mermaid">$1</div>'
   )
+})
+
+// contentから画像URLを抽出
+const extractedImages = computed(() => {
+  const imageRegex = /!\[.*?\]\((.*?)\)/g
+  const images: string[] = []
+  let match
+  
+  while ((match = imageRegex.exec(form.content)) !== null) {
+    const imageUrl = match[1]
+    if (imageUrl && !images.includes(imageUrl)) {
+      images.push(imageUrl)
+    }
+  }
+  
+  return images
 })
 
 // 現在のユーザー情報を取得
@@ -208,7 +241,9 @@ const uploadImage = async (file: File) => {
     isUploading.value = true
     errorMessage.value = ''
     
-    const result = await postsApi.uploadImage(file)
+    // 投稿IDを取得して渡す（既存投稿への追加）
+    const postId = Number(route.params.id)
+    const result = await postsApi.uploadImage(file, postId)
     
     // Markdown形式で画像を挿入
     const imageMarkdown = `![${file.name}](${result.url})`
@@ -239,6 +274,47 @@ const uploadImage = async (file: File) => {
     errorMessage.value = error.message || '画像のアップロードに失敗しました'
   } finally {
     isUploading.value = false
+  }
+}
+
+// 画像削除処理
+const deleteImage = async (imageUrl: string) => {
+  if (!confirm('この画像を削除しますか？')) {
+    return
+  }
+
+  try {
+    errorMessage.value = ''
+    
+    // URLからファイル名を抽出
+    // http://localhost/storage/posts/1/filename.jpg → filename.jpg
+    // または posts/1/filename.jpg → filename.jpg
+    const urlParts = imageUrl.split('/')
+    const filename = urlParts[urlParts.length - 1]
+    
+    if (!filename) {
+      throw new Error('ファイル名を取得できませんでした')
+    }
+    
+    const postId = Number(route.params.id)
+    
+    // APIで画像を削除
+    await postsApi.deleteImage(postId, filename)
+    
+    // contentから画像のMarkdownを削除
+    // エスケープされたURLを正規表現でマッチング
+    const escapedUrl = imageUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const imageMarkdownRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, 'g')
+    form.content = form.content.replace(imageMarkdownRegex, '').trim()
+    
+    // 成功メッセージ（エラーメッセージエリアに表示）
+    errorMessage.value = '画像を削除しました'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 3000)
+  } catch (error: any) {
+    console.error('Image delete error:', error)
+    errorMessage.value = error.message || '画像の削除に失敗しました'
   }
 }
 </script>
@@ -291,8 +367,19 @@ textarea {
 
 .content-editor textarea {
   flex: 1;
+  flex-shrink: 0;
+  min-width: 0;
   font-family: 'Noto Sans JP', monospace;
   font-size: 0.875rem;
+}
+
+.content-preview-wrapper {
+  flex: 1;
+  flex-shrink: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .content-preview {
@@ -307,6 +394,60 @@ textarea {
   font-size: 0.875rem;
 }
 
+.image-list {
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+  background: #f9f9f9;
+}
+
+.image-list h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #666;
+}
+
+.image-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.image-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  background: white;
+}
+
+.image-thumbnail {
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 0.25rem;
+}
+
+.delete-image-btn {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background-color: #e74c3c;
+  color: white;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: opacity 0.2s;
+}
+
+.delete-image-btn:hover {
+  opacity: 0.8;
+}
+
 .content-preview :deep(h1),
 .content-preview :deep(h2),
 .content-preview :deep(h3) {
@@ -315,6 +456,13 @@ textarea {
 }
 
 .content-preview :deep(p) {
+  margin: 0.5rem 0;
+}
+
+.content-preview :deep(img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
   margin: 0.5rem 0;
 }
 
@@ -367,6 +515,15 @@ textarea {
   .content-preview {
     min-height: 150px;
   }
+
+  .image-items {
+    justify-content: center;
+  }
+
+  .image-thumbnail {
+    max-width: 100px;
+    max-height: 100px;
+  }
 }
 
 .status-select {
@@ -405,6 +562,11 @@ button[type="button"]:hover {
 
 .error {
   color: #e74c3c;
+  margin-top: 0.5rem;
+}
+
+.success {
+  color: #27ae60;
   margin-top: 0.5rem;
 }
 

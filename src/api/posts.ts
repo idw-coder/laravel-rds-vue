@@ -85,7 +85,7 @@ export const postsApi = {
   },
 
   // 画像アップロード
-  async uploadImage(file: File): Promise<{ url: string; path: string }> {
+  async uploadImage(file: File, postId?: number): Promise<{ url: string; path: string }> {
     // ファイルサイズチェック（5MB）
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
@@ -101,7 +101,12 @@ export const postsApi = {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetchWithAuth(`${API_BASE}/posts/images`, {
+    // 投稿IDが指定されている場合は既存投稿への追加、ない場合は新規作成用
+    const url = postId
+      ? `${API_BASE}/posts/${postId}/images`  // 既存投稿: posts/{postId}/filename.jpg
+      : `${API_BASE}/posts/images`;            // 新規作成: posts/temp/filename.jpg
+
+    const response = await fetchWithAuth(url, {
       method: 'POST',
       body: formData,
     });
@@ -116,6 +121,35 @@ export const postsApi = {
         errorMessage = '画像をアップロードする権限がありません（paidまたはadminロールが必要です）';
       } else if (response.status === 422) {
         errorMessage = errorData.message || 'バリデーションエラーが発生しました';
+      }
+      
+      const error = new Error(errorMessage);
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  // 画像削除
+  async deleteImage(postId: number, filename: string): Promise<void> {
+    const response = await fetchWithAuth(
+      `${API_BASE}/posts/${postId}/images/${filename}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      let errorMessage = '画像の削除に失敗しました';
+      
+      if (response.status === 401) {
+        errorMessage = '認証エラーが発生しました。再度ログインしてください';
+      } else if (response.status === 403) {
+        errorMessage = '画像を削除する権限がありません';
+      } else if (response.status === 404) {
+        errorMessage = errorData.message || '画像が見つかりませんでした';
       }
       
       const error = new Error(errorMessage);
