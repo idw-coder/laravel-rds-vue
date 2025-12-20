@@ -99,13 +99,12 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
-import { getDocument, updateDocument, uploadImage, deleteImage, acquireLock, releaseLock, checkLockStatus, refreshLock } from '@/api/sharedDocument'
+import { getDocument, updateDocument, uploadImage, deleteImage, acquireLock, releaseLock, checkLockStatus } from '@/api/sharedDocument'
 import echo from '@/api/echo'
 
 // ============================================
 // 定数定義
 // ============================================
-const HEARTBEAT_INTERVAL = 10000 // 10秒
 const LOCK_CHECK_INTERVAL = 10000 // 10秒
 const AUTO_SAVE_DELAY = 2000 // 2秒
 const AUTO_UNLOCK_TIMEOUT = 5000 // 5秒
@@ -142,7 +141,6 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 // タイマー
-let heartbeatInterval: number | null = null // ロックの更新を定期的に行うタイマー
 let lockStatusCheckInterval: number | null = null // ロック状態を定期的に確認するタイマー
 let autoSaveTimer: number | null = null // デバウンス付き自動保存用タイマー
 let autoUnlockTimer: number | null = null // 操作がない場合の自動ロック解除用タイマー
@@ -212,7 +210,6 @@ const handleAcquireLock = async (): Promise<boolean> => {
     isLocked.value = true
     isMyLock.value = true
     lastContent = content.value // 初期状態を保存（変更検知用）
-    startHeartbeat() // ロックの維持を開始
     resetAutoUnlockTimer(AUTO_UNLOCK_TIMEOUT) // 自動ロック解除タイマーを開始
     return true
   } catch (error: any) {
@@ -248,7 +245,6 @@ const handleReleaseLock = async (): Promise<void> => {
   } finally {
     isLocked.value = false
     isMyLock.value = false
-    stopHeartbeat()
     
     // 自動保存タイマーをクリア
     if (autoSaveTimer) {
@@ -258,37 +254,6 @@ const handleReleaseLock = async (): Promise<void> => {
   }
 }
 
-// ハートビート開始（ロックの更新を定期的に行うことで、ロックが失われた場合を検知）
-const startHeartbeat = (): void => {
-  stopHeartbeat()
-
-  heartbeatInterval = setInterval(async () => {
-    try {
-      await refreshLock(roomId) // ロックを更新
-      
-      // ハートビート時に変更があれば自動保存
-      if (isMyLock.value && content.value !== lastContent) {
-        await autoSave()
-      }
-    } catch (error: any) {
-      console.error('ハートビートエラー:', error)
-      // ロックが失われた場合（404エラー: ロックが見つからない、403エラー: 自分のロックでない）
-      if (error.status === 404 || error.status === 403) {
-        isLocked.value = false
-        isMyLock.value = false
-        stopHeartbeat()
-        showErrorMessage('ロックが失われました')
-      }
-    }
-  }, HEARTBEAT_INTERVAL)
-}
-
-const stopHeartbeat = (): void => {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval)
-    heartbeatInterval = null
-  }
-}
 
 const handleCheckLockStatus = async (): Promise<void> => {
   try {
@@ -582,9 +547,10 @@ const setupWebSocket = () => {
     if (isMyLock.value) return
     
     isLocked.value = true
+    isMyLock.value = false
     textareaRef.value?.setAttribute('disabled', 'true')
     showErrorMessage('他のユーザーが編集中です')
-    stopHeartbeat()
+    stopAutoUnlockTimer()
   })
 
   // ロック解放イベント（他のユーザーが編集を終了した場合）
@@ -592,7 +558,6 @@ const setupWebSocket = () => {
     isLocked.value = false
     isMyLock.value = false
     textareaRef.value?.removeAttribute('disabled')
-    stopHeartbeat()
   })
 }
 
@@ -629,7 +594,6 @@ onUnmounted(() => {
   handleReleaseLock()
 
   // タイマーをクリア
-  if (heartbeatInterval) clearInterval(heartbeatInterval)
   if (lockStatusCheckInterval) clearInterval(lockStatusCheckInterval)
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
   if (autoUnlockTimer) clearTimeout(autoUnlockTimer)
