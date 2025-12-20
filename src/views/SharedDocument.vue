@@ -215,7 +215,7 @@ const handleReleaseLock = async (): Promise<void> => {
   }
 }
 
-// ハートビート開始
+// ハートビート開始（ロックの更新を定期的に行うことで、ロックが失われた場合を検知するための仕組み）
 const startHeartbeat = (): void => {
   stopHeartbeat() // 既存のハートビートを停止
 
@@ -240,7 +240,7 @@ const startHeartbeat = (): void => {
         }, 5000)
       }
     }
-  }, 5000) // 5秒ごと
+  }, 3000) // 3秒ごと
 }
 
 // ハートビート停止
@@ -506,14 +506,18 @@ const handleDrop = async (event: DragEvent) => {
   }
 }
 
-// 画像アップロード処理
+
+/**
+ * 画像アップロード処理
+ * @param file アップロードするファイル
+ */
 const uploadImageFile = async (file: File) => {
   // ロックを保持していない場合はアップロードできない
-  if (!isMyLock.value) {
+  if (isLocked.value && !isMyLock.value) {
     errorMessage.value = '編集権限がありません。他のユーザーが編集中です。'
     setTimeout(() => {
       errorMessage.value = ''
-    }, 5000)
+    }, 2000)
     return
   }
 
