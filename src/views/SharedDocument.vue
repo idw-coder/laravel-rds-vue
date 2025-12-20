@@ -105,7 +105,7 @@ import echo from '@/api/echo'
 // ============================================
 // 定数定義
 // ============================================
-const HEARTBEAT_INTERVAL = 3000 // 3秒
+const HEARTBEAT_INTERVAL = 10000 // 10秒
 const LOCK_CHECK_INTERVAL = 10000 // 10秒
 const AUTO_SAVE_DELAY = 2000 // 2秒
 const AUTO_UNLOCK_TIMEOUT = 5000 // 5秒
@@ -272,8 +272,8 @@ const startHeartbeat = (): void => {
       }
     } catch (error: any) {
       console.error('ハートビートエラー:', error)
-      // ロックが失われた場合（404エラー）
-      if (error.status === 404) {
+      // ロックが失われた場合（404エラー: ロックが見つからない、403エラー: 自分のロックでない）
+      if (error.status === 404 || error.status === 403) {
         isLocked.value = false
         isMyLock.value = false
         stopHeartbeat()
