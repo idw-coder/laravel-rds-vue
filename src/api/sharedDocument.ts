@@ -92,3 +92,92 @@ export const deleteImage = async (roomId: string, filename: string): Promise<voi
 
   return response.json();
 };
+
+// ロック関連のインターフェース
+export interface LockStatus {
+  is_locked: boolean;
+  locked_at?: string;
+  expires_at?: string;
+}
+
+export interface LockResponse {
+  success: boolean;
+  locked_at?: string;
+  expires_at?: string;
+  error?: string;
+  message?: string;
+}
+
+// ロック取得
+export const acquireLock = async (roomId: string): Promise<LockResponse> => {
+  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
+    method: 'POST',
+    credentials: 'include', // セッションCookieを送信
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMessage = data.message || 'ロックの取得に失敗しました';
+    const error = new Error(errorMessage) as any;
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+};
+
+// ロック解放
+export const releaseLock = async (roomId: string): Promise<LockResponse> => {
+  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMessage = data.message || 'ロックの解放に失敗しました';
+    const error = new Error(errorMessage) as any;
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+};
+
+// ロック状態確認
+export const checkLockStatus = async (roomId: string): Promise<LockStatus> => {
+  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'ロック状態の確認に失敗しました');
+  }
+
+  return response.json();
+};
+
+// ロック更新（ハートビート）
+export const refreshLock = async (roomId: string): Promise<LockResponse> => {
+  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
+    method: 'PUT',
+    credentials: 'include',
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMessage = data.message || 'ロックの更新に失敗しました';
+    const error = new Error(errorMessage) as any;
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+};
