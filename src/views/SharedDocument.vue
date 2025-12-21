@@ -99,13 +99,12 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
-import { getDocument, updateDocument, uploadImage, deleteImage, acquireLock, releaseLock, checkLockStatus } from '@/api/sharedDocument'
+import { getDocument, updateDocument, uploadImage, deleteImage, acquireLock, releaseLock } from '@/api/sharedDocument'
 import echo from '@/api/echo'
 
 // ============================================
 // 定数定義
 // ============================================
-const LOCK_CHECK_INTERVAL = 10000 // 10秒
 const AUTO_SAVE_DELAY = 2000 // 2秒
 const AUTO_UNLOCK_TIMEOUT = 5000 // 5秒
 const ERROR_MESSAGE_DISPLAY_TIME = 5000 // 5秒
@@ -141,12 +140,16 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 // タイマー
-let lockStatusCheckInterval: number | null = null // ロック状態を定期的に確認するタイマー
 let autoSaveTimer: number | null = null // デバウンス付き自動保存用タイマー
 let autoUnlockTimer: number | null = null // 操作がない場合の自動ロック解除用タイマー
 
 // WebSocket
 let channel: any = null
+
+// beforeunloadイベント用のラッパー関数
+const handleBeforeUnload = () => {
+  handleReleaseLock()
+}
 
 // ============================================
 // Computed Properties
@@ -228,13 +231,13 @@ const handleAcquireLock = async (): Promise<boolean> => {
 }
 
 // ロックを解放（編集終了時）
-const handleReleaseLock = async (): Promise<void> => {
+const handleReleaseLock = async (skipSave: boolean = false): Promise<void> => {
   if (!isMyLock.value) return
 
   stopAutoUnlockTimer()
 
-  // 変更があれば最終保存を実行
-  if (content.value !== lastContent) {
+  // 変更があれば最終保存を実行（スキップフラグがfalseの場合のみ）
+  if (!skipSave && content.value !== lastContent) {
     await autoSave()
   }
 
@@ -254,16 +257,6 @@ const handleReleaseLock = async (): Promise<void> => {
   }
 }
 
-
-const handleCheckLockStatus = async (): Promise<void> => {
-  try {
-    const status = await checkLockStatus(roomId)
-    isLocked.value = status.is_locked
-  } catch (error) {
-    console.error('ロック状態確認エラー:', error)
-  }
-}
-
 // 自動ロック解除タイマーをリセット（操作がない場合に自動的にロックを解除）
 const resetAutoUnlockTimer = (timeout: number = AUTO_UNLOCK_TIMEOUT): void => {
   // 既存のタイマーをクリア
@@ -277,11 +270,11 @@ const resetAutoUnlockTimer = (timeout: number = AUTO_UNLOCK_TIMEOUT): void => {
   // タイマーを設定（操作がない場合、指定時間後にロックを自動解除）
   autoUnlockTimer = window.setTimeout(async () => {
     if (isMyLock.value) {
-      // 最終保存を実行してからロック解除
+      // 最終保存を実行してからロック解除（保存はhandleReleaseLockで行うためスキップ）
       if (content.value !== lastContent) {
         await autoSave()
       }
-      await handleReleaseLock()
+      await handleReleaseLock(true) // 既に保存済みなのでスキップ
       showErrorMessage('操作がないため、ロックを自動解除しました', 3000)
     }
   }, timeout)
@@ -307,7 +300,7 @@ const autoSave = async () => {
     await updateDocument(roomId, content.value)
     lastContent = content.value // 保存済み状態を更新
     lastSavedAt.value = new Date()
-  } catch (error) {
+  } catch (error: any) {
     console.error('自動保存エラー:', error)
     saveError.value = true
     showErrorMessage('自動保存に失敗しました')
@@ -317,7 +310,17 @@ const autoSave = async () => {
 }
 
 // 入力時の処理（デバウンス付き自動保存）
-const handleInput = () => {
+const handleInput = async () => {
+
+  // ロックがかかっていない場合は、取得を試みる
+  if (!isMyLock.value) {
+    const success = await handleAcquireLock()
+    if (!success) {
+      return // ロック取得に失敗した場合は、処理を中断
+    }
+    lastContent = content.value // 初期状態を保存
+  }
+
   if (!isMyLock.value) return
   
   // デバウンスタイマーをリセット
@@ -405,10 +408,19 @@ const handleDrop = async (event: DragEvent) => {
 
 // 画像アップロード処理
 const uploadImageFile = async (file: File) => {
-  // ロックを保持していない場合はアップロードできない
+  // 他のユーザーがロックしている場合はアップロードできない
   if (isLocked.value && !isMyLock.value) {
     showErrorMessage('編集権限がありません。他のユーザーが編集中です。', 2000)
     return
+  }
+
+  // ロックがかかっていない場合は、自動的にロックを取得
+  if (!isMyLock.value) {
+    const lockAcquired = await handleAcquireLock()
+    if (!lockAcquired) {
+      showErrorMessage('ロックの取得に失敗しました', 2000)
+      return
+    }
   }
 
   try {
@@ -574,19 +586,11 @@ onMounted(async () => {
     console.error('Failed to load document:', error)
   }
 
-  // ロック状態を確認
-  await handleCheckLockStatus()
-
-  // 定期的にロック状態を確認（10秒ごと）
-  lockStatusCheckInterval = setInterval(() => {
-    handleCheckLockStatus()
-  }, LOCK_CHECK_INTERVAL)
-
-  // WebSocketチャンネルに接続
+  // WebSocketチャンネルに接続（ロック状態はWebSocketで受信）
   setupWebSocket()
   
   // ページ離脱時の処理（ロックを解放）
-  window.addEventListener('beforeunload', handleReleaseLock)
+  window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 onUnmounted(() => {
@@ -594,12 +598,11 @@ onUnmounted(() => {
   handleReleaseLock()
 
   // タイマーをクリア
-  if (lockStatusCheckInterval) clearInterval(lockStatusCheckInterval)
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
   if (autoUnlockTimer) clearTimeout(autoUnlockTimer)
 
   // イベントリスナーを削除
-  window.removeEventListener('beforeunload', handleReleaseLock)
+  window.removeEventListener('beforeunload', handleBeforeUnload)
 
   // WebSocketチャンネルから切断
   if (channel) {

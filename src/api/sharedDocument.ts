@@ -8,7 +8,9 @@ export interface SharedDocument {
 export const documentApi = {
   // ドキュメント取得
   async get(roomId: string): Promise<SharedDocument> {
-    const response = await fetch(`${API_BASE}/documents/${roomId}`);
+    const response = await fetch(`${API_BASE}/documents/${roomId}`, {
+      credentials: 'include', // セッションCookieを送信
+    });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.message || `Failed to fetch document (${response.status})`;
@@ -21,6 +23,7 @@ export const documentApi = {
   async save(roomId: string, content: string): Promise<SharedDocument> {
     const response = await fetch(`${API_BASE}/documents/${roomId}`, {
       method: "POST",
+      credentials: 'include', // セッションCookieを送信
       headers: {
         "Content-Type": "application/json",
       },
@@ -68,6 +71,7 @@ export const uploadImage = async (roomId: string, file: File): Promise<{ url: st
 
   const response = await fetch(`${API_BASE}/documents/${roomId}/images`, {
     method: 'POST',
+    credentials: 'include', // セッションCookieを送信
     body: formData,
   });
 
@@ -83,6 +87,7 @@ export const uploadImage = async (roomId: string, file: File): Promise<{ url: st
 export const deleteImage = async (roomId: string, filename: string): Promise<void> => {
   const response = await fetch(`${API_BASE}/documents/${roomId}/images/${filename}`, {
     method: 'DELETE',
+    credentials: 'include', // セッションCookieを送信
   });
 
   if (!response.ok) {
@@ -96,6 +101,7 @@ export const deleteImage = async (roomId: string, filename: string): Promise<voi
 // ロック関連のインターフェース
 export interface LockStatus {
   is_locked: boolean;
+  is_my_lock?: boolean;
   locked_at?: string;
   expires_at?: string;
 }
@@ -159,7 +165,8 @@ export const checkLockStatus = async (roomId: string): Promise<LockStatus> => {
     throw new Error(errorData.message || 'ロック状態の確認に失敗しました');
   }
 
-  return response.json();
+  const data = await response.json();
+  return data as LockStatus;
 };
 
 // ロック更新（ハートビート）
