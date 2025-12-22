@@ -168,23 +168,3 @@ export const checkLockStatus = async (roomId: string): Promise<LockStatus> => {
   const data = await response.json();
   return data as LockStatus;
 };
-
-// ロック更新（ハートビート）
-export const refreshLock = async (roomId: string): Promise<LockResponse> => {
-  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
-    method: 'PUT',
-    credentials: 'include',
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const errorMessage = data.message || 'ロックの更新に失敗しました';
-    const error = new Error(errorMessage) as any;
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
-};

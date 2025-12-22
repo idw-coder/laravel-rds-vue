@@ -11,10 +11,11 @@
         </router-link>
         <nav class="nav-container">
           <div class="nav-links">
-            <router-link 
+            <span 
               class="nav-link" 
-              :class="{ 'nav-link-active': route.path === '/' || route.path.startsWith('/shared-doc/') }"
-              to="/">共同エディタ</router-link>
+              :class="{ 'nav-link-active': route.path.startsWith('/shared-doc/') }"
+              @click="createRoom"
+              style="cursor: pointer;">共同エディタ</span>
             <!-- 投稿権限がある場合はドロップダウン -->
             <div v-if="canCreatePost" class="nav-dropdown">
               <span 
@@ -76,10 +77,11 @@
 
           <!-- モバイルメニュー -->
           <div v-if="isMenuOpen" class="mobile-menu">
-            <router-link 
+            <span 
               class="mobile-menu-item" 
-              :class="{ 'mobile-menu-item-active': route.path === '/' || route.path.startsWith('/shared-doc/') }"
-              to="/" @click="closeMenu">共同エディタ</router-link>
+              :class="{ 'mobile-menu-item-active': route.path.startsWith('/shared-doc/') }"
+              @click="createRoom(); closeMenu();"
+              style="cursor: pointer;">共同エディタ</span>
             <router-link 
               class="mobile-menu-item" 
               :class="{ 'mobile-menu-item-active': route.path === '/posts' }"
@@ -327,6 +329,12 @@ const handleLogout = async () => {
 
 const handleLogoutMobile = async () => {
   await handleLogout();
+};
+
+// 新しいルームを作成して遷移
+const createRoom = () => {
+  const roomId = crypto.randomUUID();
+  router.push(`/shared-doc/${roomId}`);
 };
 </script>
 

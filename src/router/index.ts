@@ -12,7 +12,7 @@ import NotFound from "@/views/NotFound.vue";
 import BookReviewList from "@/views/BookReviewList.vue";
 import YouTuberList from "@/views/YouTuberList.vue";
 import AdminUsers from "@/views/AdminUsers.vue";
-import EditorHome from "@/views/EditorHome.vue";
+import Home from "@/views/Home.vue";
 import SharedDocument from "@/views/SharedDocument.vue";
 
 
@@ -21,8 +21,8 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      name: "editor-home",
-      component: EditorHome,
+      name: "home",
+      component: Home,
     },
     {
       path: "/shared-doc/:roomId",

@@ -60,6 +60,14 @@
         </div>
       </div>
       <div class="content-editor">
+        <!-- テキストエリア
+          isLocked: ロックがかかっているかどうか
+          isMyLock: 自分がロックを保持しているかどうか
+          disabled: ロックがかかっている場合は、テキストエリアを無効化
+          focus: テキストエリアにフォーカスが当たった時の処理
+          blur: テキストエリアからフォーカスが外れた時の処理
+          input: テキストエリアに入力された時の処理
+        -->
         <textarea 
           ref="textareaRef"
           v-model="content" 
@@ -320,8 +328,6 @@ const handleInput = async () => {
     }
     lastContent = content.value // 初期状態を保存
   }
-
-  if (!isMyLock.value) return
   
   // デバウンスタイマーをリセット
   if (autoSaveTimer) {
