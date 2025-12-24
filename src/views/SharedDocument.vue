@@ -140,6 +140,8 @@ const urlCopied = ref(false)
 // ロック状態
 const isLocked = ref(false) // 誰かがロック中かどうか
 const isMyLock = ref(false) // 自分がロックを保持しているかどうか
+let mySessionId = '' // 自分のセッションID（WebSocketイベント判定用）
+let isAcquiringLock = false // ロック取得中フラグ（WebSocketイベントのレースコンディション対策）
 const lastSavedAt = ref<Date | null>(null)
 const saveError = ref(false)
 
@@ -216,10 +218,12 @@ const formatTime = (date: Date): string => {
 // ============================================
 // 編集開始時にロックを取得
 const handleAcquireLock = async (): Promise<boolean> => {
+  isAcquiringLock = true // ロック取得中フラグを立てる（WebSocketイベント無視用）
   try {
-    await acquireLock(roomId)
+    const response = await acquireLock(roomId)
     isLocked.value = true
     isMyLock.value = true
+    mySessionId = response.session_id || '' // 自分のセッションIDを保存
     lastContent = content.value // 初期状態を保存（変更検知用）
     resetAutoUnlockTimer(AUTO_UNLOCK_TIMEOUT) // 自動ロック解除タイマーを開始
     return true
@@ -235,6 +239,8 @@ const handleAcquireLock = async (): Promise<boolean> => {
     console.error('ロック取得エラー:', error)
     showErrorMessage(error.message || 'ロックの取得に失敗しました')
     return false
+  } finally {
+    isAcquiringLock = false // ロック取得完了（成功・失敗問わず）
   }
 }
 
@@ -563,8 +569,8 @@ const setupWebSocket = () => {
 
   // ロック取得イベント（他のユーザーが編集を開始した場合）
   channel.listen('.document.locked', (data: { room_id: string; session_id: string; locked_at: string }) => {
-    // 自分のロックの場合は無視
-    if (isMyLock.value) return
+    // 自分がロック取得中、または自分のセッションIDの場合は無視
+    if (isAcquiringLock || data.session_id === mySessionId) return
     
     isLocked.value = true
     isMyLock.value = false

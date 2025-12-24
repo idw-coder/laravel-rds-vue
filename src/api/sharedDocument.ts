@@ -30,6 +30,7 @@ export interface LockStatus {
 /** ロック操作のレスポンス */
 export interface LockResponse {
   success: boolean;
+  session_id?: string;
   locked_at?: string;
   expires_at?: string;
   error?: string;
