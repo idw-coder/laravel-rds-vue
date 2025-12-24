@@ -75,8 +75,8 @@
           :disabled="isLocked && !isMyLock"
           class="markdown-input"
           @focus="handleEditorFocus"
-          @blur="handleEditorBlur"
           @input="handleInput"
+          @blur="handleEditorBlur"
         ></textarea>
         <div class="content-preview-wrapper">
           <div class="content-preview" v-html="parsedContent" @click="handleImageClick"></div>
@@ -326,8 +326,10 @@ const handleInput = async () => {
     if (!success) {
       return // ロック取得に失敗した場合は、処理を中断
     }
-    lastContent = content.value // 初期状態を保存
+    lastContent = content.value // 現在の状態を保存し、以降の変更検知の基準とする
   }
+
+  // ↓ 自分でロックを取得した場合の処理
   
   // デバウンスタイマーをリセット
   if (autoSaveTimer) {
@@ -580,7 +582,7 @@ const setupWebSocket = () => {
 }
 
 // ============================================
-// ライフサイクル
+// ページ読み込み時とページ離脱時
 // ============================================
 onMounted(async () => {
   // 初期データを取得
