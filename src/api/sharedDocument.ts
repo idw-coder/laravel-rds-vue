@@ -127,7 +127,6 @@ export const deleteImage = async (roomId: string, filename: string): Promise<voi
 // 編集ロック管理
 // ============================================================
 
-/** ロック取得（編集権限を獲得） */
 export const acquireLock = async (roomId: string): Promise<LockResponse> => {
   const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
     method: 'POST',
