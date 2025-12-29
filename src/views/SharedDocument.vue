@@ -11,17 +11,17 @@
     </div>
 
     <!-- ロック状態の表示 -->
-    <div v-if="isLocked && !isMyLock" class="lock-notice lock-notice-warning">
+    <div v-if="lockState === 'lockedBySomeone'" class="lock-notice lock-notice-warning">
       <i class="fas fa-lock"></i>
       他のユーザーが編集中です。編集が完了するまでお待ちください。
     </div>
-    <div v-if="isMyLock" class="lock-notice lock-notice-success">
+    <div v-if="lockState === 'lockedByMe'" class="lock-notice lock-notice-success">
       <i class="fas fa-edit"></i>
       編集中
     </div>
 
     <!-- 保存状態の表示 -->
-    <div v-if="isMyLock" class="save-status">
+    <div v-if="lockState === 'lockedByMe'" class="save-status">
       <span v-if="isSaving" class="save-status-saving">
         <i class="fas fa-spinner fa-spin"></i> 保存中...
       </span>
@@ -35,16 +35,16 @@
 
     <div class="content-section">
       <label>内容（Markdown対応）</label>
-      <div 
+      <div
         class="drop-zone"
-        :class="{ 'drag-over': isDragOver, 'uploading': isUploading }"
+        :class="{ 'drag-over': isDragOver, uploading: isUploading }"
         @drop.prevent="handleDrop"
         @dragover.prevent="isDragOver = true"
         @dragleave.prevent="isDragOver = false"
         @click="triggerFileInput"
       >
         <input
-          ref="fileInputRef"
+          ref="nativeFileInputRef"
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           style="display: none"
@@ -55,42 +55,52 @@
           <p>画像をアップロード中...</p>
         </div>
         <div v-else class="drop-zone-content">
-          <p><i class="fas fa-image"></i> 画像をドラッグ&ドロップまたはクリックして選択</p>
+          <p>
+            <i class="fas fa-image"></i>
+            画像をドラッグ&ドロップまたはクリックして選択
+          </p>
           <p class="drop-zone-hint">（最大5MB、JPEG/PNG/GIF/WebP）</p>
         </div>
       </div>
-      <div>
+      <div style="display: flex; gap: 10px; color: #41b883;">
         <p>{{ autoSaveTimer }}</p>
         <p>{{ autoUnlockTimer }}</p>
+        <p>{{ lockState === 'lockedByMe' ? 'isMyLock' : 'notMyLock' }}</p>
+        <p>{{ lockState === 'lockedBySomeone' ? 'isLocked' : 'notLocked' }}</p>
+        <p>{{ isAcquiringLock ? 'isLockingInProgress' : 'notLockingInProgress' }}</p>
       </div>
       <div class="content-editor">
-        <!-- テキストエリア
-          isLocked: ロックがかかっているかどうか
-          isMyLock: 自分がロックを保持しているかどうか
-          disabled: ロックがかかっている場合は、テキストエリアを無効化
-          focus: テキストエリアにフォーカスが当たった時の処理
-          blur: テキストエリアからフォーカスが外れた時の処理
-          input: テキストエリアに入力された時の処理
-        -->
-        <textarea 
-          ref="textareaRef"
-          v-model="currentTextareaContent" 
-          :placeholder="isLocked && !isMyLock ? '他のユーザーが編集中です' : 'Markdown を入力...'"
-          :disabled="isLocked && !isMyLock"
+        <textarea
+          ref="textareaElementRef"
+          v-model="currentTextareaContent"
+          :placeholder="
+            lockState === 'lockedBySomeone'
+              ? '他のユーザーが編集中です'
+              : 'Markdown を入力...'
+          "
+          :disabled="lockState === 'lockedBySomeone'"
           class="markdown-input"
           @focus="handleEditorFocus"
           @input="handleInput"
           @blur="handleEditorBlur"
         ></textarea>
         <div class="content-preview-wrapper">
-          <div class="content-preview" v-html="parsedContent" @click="handleImageClick"></div>
+          <div
+            class="content-preview"
+            v-html="parsedContent"
+            @click="handleImageClick"
+          ></div>
           <div v-if="extractedImages.length > 0" class="image-list">
             <h4>アップロード済み画像</h4>
             <div class="image-items">
-              <div v-for="imageUrl in extractedImages" :key="imageUrl" class="image-item">
+              <div
+                v-for="imageUrl in extractedImages"
+                :key="imageUrl"
+                class="image-item"
+              >
                 <img :src="imageUrl" alt="Preview" class="image-thumbnail" />
-                <button 
-                  @click="deleteImageFromList(imageUrl)" 
+                <button
+                  @click="deleteImageFromList(imageUrl)"
                   class="delete-image-btn"
                   type="button"
                 >
@@ -103,455 +113,467 @@
       </div>
     </div>
 
-    <p v-if="errorMessage" :class="isSuccessMessage ? 'success' : 'error'">{{ errorMessage }}</p>
+    <p v-if="errorMessage" :class="isSuccessMessage ? 'success' : 'error'">
+      {{ errorMessage }}
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
-import { marked } from 'marked'
-import { getDocument, updateDocument, uploadImage, deleteImage, acquireLock, releaseLock } from '@/api/sharedDocument'
-import echo from '@/api/echo'
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { useRoute } from "vue-router";
+import { marked } from "marked";
+import {
+  getDocument,
+  updateDocument,
+  uploadImage,
+  deleteImage,
+} from "@/api/sharedDocument";
+import { useDocumentLock } from "@/composables/useDocumentLock";
+import echo from "@/api/echo";
 
 // ============================================
 // 定数定義
 // ============================================
-const AUTO_SAVE_DELAY = 2000 // 2秒
-const AUTO_UNLOCK_TIMEOUT = 5000 // 5秒
-const ERROR_MESSAGE_DISPLAY_TIME = 5000 // 5秒
+const AUTO_SAVE_DELAY = 2000; // 2秒
+const AUTO_UNLOCK_TIMEOUT = 5000; // 5秒
+const ERROR_MESSAGE_DISPLAY_TIME = 5000; // 5秒
 
 // ============================================
 // ルート情報
 // ============================================
-const route = useRoute()
-const roomId = route.params.roomId as string
+const route = useRoute();
+const roomId = route.params.roomId as string;
 
 // ============================================
 // リアクティブ変数
 // ============================================
-const currentTextareaContent = ref('')
-let snapshottedTextareaContent = '' // 変更検知用（自動保存の判定に使用）
+const currentTextareaContent = ref("");
+let snapshottedTextareaContent = ""; // 変更検知用（自動保存の判定に使用）
 
 // UI状態
-const isSaving = ref(false)
-const isUploading = ref(false)
-const isDragOver = ref(false)
-const errorMessage = ref('')
-const urlCopied = ref(false)
+const isSaving = ref(false);
+const isUploading = ref(false);
+const isDragOver = ref(false);
+const errorMessage = ref("");
+const urlCopied = ref(false);
 
-// ロック状態
-const isLocked = ref(false) // 誰かがロック中かどうか
-const isMyLock = ref(false) // 自分がロックを保持しているかどうか
-let mySessionId = ''
-let isLockingInProgress = false // ロック取得中フラグ（WebSocketイベントのレースコンディション対策）
-const lastSavedAt = ref<Date | null>(null)
-const saveError = ref(false)
+const lastSavedAt = ref<Date | null>(null);
+const saveError = ref(false);
 
 // 参照
-const fileInputRef = ref<HTMLInputElement | null>(null)
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const nativeFileInputRef = ref<HTMLInputElement | null>(null);
+const textareaElementRef = ref<HTMLTextAreaElement | null>(null);
 
 // タイマー
-let autoSaveTimer: number | null = null
-let autoUnlockTimer: number | null = null
+let autoSaveTimer: number | null = null;
+let autoUnlockTimer: number | null = null;
 // WebSocket
-let channel: any = null
+let channel: any = null;
 
 // beforeunloadイベント用のラッパー関数
 const handleBeforeUnload = () => {
-  handleReleaseLock()
-}
+  handleUnlock();
+};
+
+const { lockState, currentSessionId, isAcquiringLock, tryLock, unlock } = useDocumentLock(roomId);
+
 
 // ============================================
 // Computed Properties
 // ============================================
 // Markdownをパースしてプレビュー表示用のHTMLに変換
 const parsedContent = computed(() => {
-  const parsed = marked.parse(currentTextareaContent.value)
-  return typeof parsed === 'string' ? parsed : String(parsed)
-})
+  const parsed = marked.parse(currentTextareaContent.value);
+  return typeof parsed === "string" ? parsed : String(parsed);
+});
 
 // contentから画像URLを抽出（アップロード済み画像リストの表示用）
 const extractedImages = computed(() => {
-  const imageRegex = /!\[.*?\]\((.*?)\)/g
-  const images: string[] = []
-  let match
-  
+  const imageRegex = /!\[.*?\]\((.*?)\)/g;
+  const images: string[] = [];
+  let match;
+
   while ((match = imageRegex.exec(currentTextareaContent.value)) !== null) {
-    const imageUrl = match[1]
+    const imageUrl = match[1];
     // 共有ドキュメントの画像のみ抽出
-    if (imageUrl && imageUrl.includes('/shared-documents/') && !images.includes(imageUrl)) {
-      images.push(imageUrl)
+    if (
+      imageUrl &&
+      imageUrl.includes("/shared-documents/") &&
+      !images.includes(imageUrl)
+    ) {
+      images.push(imageUrl);
     }
   }
-  
-  return images
-})
+
+  return images;
+});
 
 // エラーメッセージが成功メッセージかどうかを判定
 const isSuccessMessage = computed(() => {
-  return errorMessage.value.includes('削除しました') || 
-         errorMessage.value.includes('保存しました') || 
-         errorMessage.value.includes('ロックを自動解除')
-})
+  return (
+    errorMessage.value.includes("削除しました") ||
+    errorMessage.value.includes("保存しました") ||
+    errorMessage.value.includes("ロックを自動解除")
+  );
+});
 
 // ============================================
 // ユーティリティ関数
 // ============================================
-const showErrorMessage = (message: string, duration: number = ERROR_MESSAGE_DISPLAY_TIME) => {
-  errorMessage.value = message
+const showErrorMessage = (
+  message: string,
+  duration: number = ERROR_MESSAGE_DISPLAY_TIME
+) => {
+  errorMessage.value = message;
   setTimeout(() => {
-    errorMessage.value = ''
-  }, duration)
-}
+    errorMessage.value = "";
+  }, duration);
+};
 
 const formatTime = (date: Date): string => {
-  const now = new Date()
-  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-  
-  if (diff < 60) return `${diff}秒前`
-  if (diff < 3600) return `${Math.floor(diff / 60)}分前`
-  return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
-}
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diff < 60) return `${diff}秒前`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}分前`;
+  return date.toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 // ============================================
 // ロック管理
 // ============================================
-const handleAcquireLock = async (): Promise<boolean> => {
-  isLockingInProgress = true // ロック取得中フラグを立てる（WebSocketイベント無視用一瞬「他のユーザーが編集中です」と表示される）
+const handleTryLock = async (): Promise<boolean> => {
   try {
-    const response = await acquireLock(roomId)
-    isLocked.value = true
-    isMyLock.value = true
-    mySessionId = response.session_id || ''
-    snapshottedTextareaContent = currentTextareaContent.value
-    resetAutoUnlockTimer(AUTO_UNLOCK_TIMEOUT)
-    return true
-  } catch (error: any) {
-    if (error.status === 409) {
-      // 他のユーザーが編集中（競合エラー）
-      isLocked.value = true
-      isMyLock.value = false
-      const errorData = error.data || {}
-      showErrorMessage(errorData.message || '他のユーザーが編集中です')
-      return false
+    const success = await tryLock();
+    if (success) {
+      snapshottedTextareaContent = currentTextareaContent.value;
+      resetAutoUnlockTimer(); 
+    } else {
+      showErrorMessage("他のユーザーが編集中です");
     }
-    console.error('ロック取得エラー:', error)
-    showErrorMessage(error.message || 'ロックの取得に失敗しました')
-    return false
-  } finally {
-    isLockingInProgress = false
+    return success;
+  } catch (error: any) {
+    console.error("ロック取得エラー:", error);
+    showErrorMessage(error.message || "ロックの取得に失敗しました");
+    return false;  
   }
-}
+};
 
-const handleReleaseLock = async (): Promise<void> => {
-  if (!isMyLock.value) return
+const handleUnlock = async (): Promise<void> => {
+  if (lockState.value !== "lockedByMe") return;
 
   if (currentTextareaContent.value !== snapshottedTextareaContent) {
-    await autoSave()
+    await autoSave();
   }
 
   try {
-    await releaseLock(roomId)
+    await unlock();
   } catch (error: any) {
-    console.error('ロック解放エラー:', error)
-  } finally {
-    isLocked.value = false
-    isMyLock.value = false
-    
-    // 自動保存タイマーをクリア
-    if (autoSaveTimer) {
-      clearTimeout(autoSaveTimer)
-      autoSaveTimer = null
-    }
+    console.error("ロック解放エラー:", error);
+  } 
+  
+  // ロックを解放した後に自動保存タイマーが動いていると、保存しようとして失敗するので、自動保存タイマーをクリア
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
   }
-}
+};
 
 const resetAutoUnlockTimer = (timeout: number = AUTO_UNLOCK_TIMEOUT): void => {
-
-  stopAutoUnlockTimer()
+  stopAutoUnlockTimer();
 
   autoUnlockTimer = window.setTimeout(async () => {
-    if (isMyLock.value) {
-      await handleReleaseLock()
-      showErrorMessage('操作がないため、ロックを自動解除しました', 3000)
+    if (lockState.value === 'lockedByMe') {
+      await handleUnlock();
+      showErrorMessage("操作がないため、ロックを自動解除しました", 3000);
     }
-  }, timeout)
-}
+  }, timeout);
+};
 
 const stopAutoUnlockTimer = (): void => {
   if (autoUnlockTimer) {
-    clearTimeout(autoUnlockTimer)
-    autoUnlockTimer = null
+    clearTimeout(autoUnlockTimer);
+    autoUnlockTimer = null;
   }
-}
+};
 
 // ============================================
 // エディタイベントハンドラー
 // ============================================
 
 const handleEditorFocus = async () => {
-  if (isLocked.value && !isMyLock.value) {
-    textareaRef.value?.blur() // フォーカスを外す
-    return
+  if (lockState.value === 'lockedBySomeone') {
+    textareaElementRef.value?.blur(); // フォーカスを外す
+    return;
   }
 
-  if (!isMyLock.value) {
-    const success = await handleAcquireLock()
+  if (lockState.value !== 'lockedByMe') {
+    const success = await handleTryLock();
     if (success) {
-      snapshottedTextareaContent = currentTextareaContent.value
+      snapshottedTextareaContent = currentTextareaContent.value;
     } else {
-      textareaRef.value?.blur()
+      textareaElementRef.value?.blur();
     }
   }
-}
+};
 
 const handleInput = async () => {
-
-  if (!isMyLock.value) {
-    const success = await handleAcquireLock()
+  if (lockState.value !== 'lockedByMe') {
+    const success = await handleTryLock();
     if (!success) {
-      return
+      return;
     }
-    snapshottedTextareaContent = currentTextareaContent.value
+    snapshottedTextareaContent = currentTextareaContent.value;
   }
 
   if (autoSaveTimer) {
-    clearTimeout(autoSaveTimer)
+    clearTimeout(autoSaveTimer);
   }
 
-  resetAutoUnlockTimer()
+  resetAutoUnlockTimer();
 
   autoSaveTimer = window.setTimeout(() => {
-    autoSave()
-  }, AUTO_SAVE_DELAY)
-}
+    autoSave();
+  }, AUTO_SAVE_DELAY);
+};
 
 // エディタからフォーカスが外れた時の処理
 const handleEditorBlur = () => {
-  if (!isMyLock.value) return
-  
+  if (lockState.value !== 'lockedByMe') return;
+
   // 最終保存を実行
   if (currentTextareaContent.value !== snapshottedTextareaContent) {
-    autoSave()
+    autoSave();
   }
-  
+
   // フォーカスが外れたので、5秒後に自動ロック解除
-  resetAutoUnlockTimer(AUTO_UNLOCK_TIMEOUT)
-}
+  resetAutoUnlockTimer(AUTO_UNLOCK_TIMEOUT);
+};
 
 const autoSave = async () => {
-  if (!isMyLock.value || currentTextareaContent.value === snapshottedTextareaContent) return
-  
+  if (
+    lockState.value !== 'lockedByMe' ||
+    currentTextareaContent.value === snapshottedTextareaContent
+  )
+    return;
+
   try {
-    isSaving.value = true
-    saveError.value = false
-    await updateDocument(roomId, currentTextareaContent.value)
-    snapshottedTextareaContent = currentTextareaContent.value // 保存済み状態を更新
-    lastSavedAt.value = new Date()
+    isSaving.value = true;
+    saveError.value = false;
+    await updateDocument(roomId, currentTextareaContent.value);
+    snapshottedTextareaContent = currentTextareaContent.value; // 保存済み状態を更新
+    lastSavedAt.value = new Date();
   } catch (error: any) {
-    console.error('自動保存エラー:', error)
-    saveError.value = true
-    showErrorMessage('自動保存に失敗しました')
+    console.error("自動保存エラー:", error);
+    saveError.value = true;
+    showErrorMessage("自動保存に失敗しました");
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
-}
+};
 
 // ============================================
 // 画像アップロード処理
 // ============================================
-// ファイル選択をトリガー
 const triggerFileInput = () => {
-  fileInputRef.value?.click()
-}
+  nativeFileInputRef.value?.click(); //ブラウザネイティブのファイル選択ボタンをクリック
+};
 
-// ファイル選択時の処理
 const handleFileSelect = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
   if (file) {
-    await uploadImageFile(file)
-    target.value = '' // ファイル選択をリセット（同じファイルを再度選択できるように）
+    await uploadImageFile(file);
+    target.value = ""; // ファイル選択をリセット（同じファイルを再度選択できるように）
   }
-}
+};
 
-// ドロップ時の処理
 const handleDrop = async (event: DragEvent) => {
-  isDragOver.value = false
-  const file = event.dataTransfer?.files[0]
+  isDragOver.value = false;
+  const file = event.dataTransfer?.files[0];
   if (file) {
-    await uploadImageFile(file)
+    await uploadImageFile(file);
   }
-}
+};
 
-// 画像アップロード処理
 const uploadImageFile = async (file: File) => {
-  // 他のユーザーがロックしている場合はアップロードできない
-  if (isLocked.value && !isMyLock.value) {
-    showErrorMessage('編集権限がありません。他のユーザーが編集中です。', 2000)
-    return
+  if (lockState.value === 'lockedBySomeone') {
+    showErrorMessage("編集権限がありません。他のユーザーが編集中です。", 2000);
+    return;
   }
 
-  // ロックがかかっていない場合は、自動的にロックを取得
-  if (!isMyLock.value) {
-    const lockAcquired = await handleAcquireLock()
+  if (lockState.value !== 'lockedByMe') {
+    const lockAcquired = await handleTryLock();
     if (!lockAcquired) {
-      showErrorMessage('ロックの取得に失敗しました', 2000)
-      return
+      showErrorMessage("ロックの取得に失敗しました", 2000);
+      return;
     }
   }
 
   try {
-    isUploading.value = true
-    errorMessage.value = ''
-    const result = await uploadImage(roomId, file)
-    
+    isUploading.value = true;
+    const result = await uploadImage(roomId, file);
+
     // Markdown形式で画像を挿入
-    const imageMarkdown = `![${file.name}](${result.url})`
-    const textarea = textareaRef.value
-    
-    if (textarea) {
-      // カーソル位置を取得
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const textBefore = currentTextareaContent.value.substring(0, start)
-      const textAfter = currentTextareaContent.value.substring(end)
-      
-      // カーソル位置に画像を挿入（改行を適切に追加）
-      const insertText = textBefore.length > 0 && !textBefore.endsWith('\n') ? '\n' + imageMarkdown : imageMarkdown
-      currentTextareaContent.value = textBefore + insertText + (textAfter.length > 0 && !textAfter.startsWith('\n') ? '\n' : '') + textAfter
-      
-      // カーソル位置を画像の後に移動
-      await nextTick()
-      const newCursorPos = start + insertText.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-      textarea.focus()
-      
-      // 画像挿入後に自動保存
-      if (isMyLock.value) {
-        await autoSave()
-      }
-    } else {
-      // テキストエリアが取得できない場合は末尾に追加
-      currentTextareaContent.value += (currentTextareaContent.value.length > 0 ? '\n' : '') + imageMarkdown
-      
-      // 画像挿入後に自動保存
-      if (isMyLock.value) {
-        await autoSave()
-      }
+    const imageMarkdown = `![${file.name}](${result.url})`;
+    const textareaElement = textareaElementRef.value!;
+
+    // カーソル位置を取得
+    const inssertOffsetStart = textareaElement.selectionStart;
+    const inssertOffsetEnd = textareaElement.selectionEnd;
+    const textBefore = currentTextareaContent.value.substring(0, inssertOffsetStart);
+    const textAfter = currentTextareaContent.value.substring(inssertOffsetEnd);
+
+    // カーソル位置に画像を挿入（改行を適切に追加）
+    const insertText =
+      textBefore.length > 0 && !textBefore.endsWith("\n")
+        ? "\n" + imageMarkdown
+        : imageMarkdown;
+
+    currentTextareaContent.value =
+      textBefore +
+      insertText +
+      (textAfter.length > 0 && !textAfter.startsWith("\n") ? "\n" : "") +
+      textAfter;
+
+    // await nextTick(); // DOM更新完了を待つ
+    // const newCursorOffset = inssertOffsetStart + insertText.length;
+    // /**
+    //  * setSelectionRange()
+    //  * @param {number} start - 選択範囲の開始位置
+    //  * @param {number} end - 選択範囲の終了位置
+    //  * @returns {void}
+    //  * テキストエリアのカーソル位置を設定
+    //  */
+    // textareaElement.setSelectionRange(newCursorOffset, newCursorOffset);
+    // textareaElement.focus();
+
+    if (lockState.value === 'lockedByMe') {
+      await autoSave();
     }
   } catch (error: any) {
-    console.error('Image upload error:', error)
-    showErrorMessage(error.message || '画像のアップロードに失敗しました')
+    console.error("Image upload error:", error);
+    showErrorMessage(error.message || "画像のアップロードに失敗しました");
   } finally {
-    isUploading.value = false
+    isUploading.value = false;
   }
-}
+};
 
 // 画像リストからの削除処理
 const deleteImageFromList = async (imageUrl: string) => {
   // 他のユーザーがロックしている場合は削除できない
-  if (isLocked.value && !isMyLock.value) {
-    showErrorMessage('編集権限がありません。他のユーザーが編集中です。', 2000)
-    return
+  if (lockState.value === 'lockedBySomeone') {
+    showErrorMessage("編集権限がありません。他のユーザーが編集中です。", 2000);
+    return;
   }
 
-  // ロックがかかっていない場合は、自動的にロックを取得
-  if (!isMyLock.value) {
-    const lockAcquired = await handleAcquireLock()
+  // ロックがかかっていない場合は、ロックを取得
+  if (lockState.value !== 'lockedByMe') {
+    const lockAcquired = await handleTryLock();
     if (!lockAcquired) {
-      showErrorMessage('ロックの取得に失敗しました', 2000)
-      return
+      showErrorMessage("ロックの取得に失敗しました", 2000);
+      return;
     }
   }
 
-  if (!confirm('この画像を削除しますか？')) {
-    return
+  if (!confirm("この画像を削除しますか？")) {
+    return;
   }
 
   try {
-    errorMessage.value = ''
-    
+    errorMessage.value = "";
+
     // URLからファイル名を抽出
-    const urlParts = imageUrl.split('/')
-    const filename = urlParts[urlParts.length - 1]
-    
+    const urlParts = imageUrl.split("/");
+    const filename = urlParts[urlParts.length - 1];
+
     if (!filename) {
-      throw new Error('ファイル名を取得できませんでした')
+      throw new Error("ファイル名を取得できませんでした");
     }
-    
+
     // APIで画像を削除
-    await deleteImage(roomId, filename)
-    
+    await deleteImage(roomId, filename);
+
     // contentから画像のMarkdownを削除（正規表現でエスケープ）
-    const escapedUrl = imageUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const imageMarkdownRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, 'g')
-    currentTextareaContent.value = currentTextareaContent.value.replace(imageMarkdownRegex, '').trim()
-    
-    showErrorMessage('画像を削除しました', 3000)
+    const escapedUrl = imageUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const imageMarkdownRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, "g");
+    currentTextareaContent.value = currentTextareaContent.value
+      .replace(imageMarkdownRegex, "")
+      .trim();
+
+    showErrorMessage("画像を削除しました", 3000);
   } catch (error: any) {
-    console.error('Image delete error:', error)
-    showErrorMessage(error.message || '画像の削除に失敗しました')
+    console.error("Image delete error:", error);
+    showErrorMessage(error.message || "画像の削除に失敗しました");
   }
-}
+};
 
 const handleImageClick = async (event: Event) => {
   // 将来の拡張用
-}
+};
 
 // ============================================
 // URL操作
 // ============================================
 const copyUrl = async () => {
   try {
-    const url = window.location.href
-    await navigator.clipboard.writeText(url)
-    urlCopied.value = true
+    const url = window.location.href;
+    await navigator.clipboard.writeText(url);
+    urlCopied.value = true;
     setTimeout(() => {
-      urlCopied.value = false
-    }, 2000)
+      urlCopied.value = false;
+    }, 2000);
   } catch (error) {
-    console.error('URLのコピーに失敗しました:', error)
-    showErrorMessage('URLのコピーに失敗しました', 3000)
+    console.error("URLのコピーに失敗しました:", error);
+    showErrorMessage("URLのコピーに失敗しました", 3000);
   }
-}
+};
 
 // ============================================
 // WebSocket設定
 // ============================================
 // WebSocketチャンネルに接続してリアルタイム更新を受信
 const setupWebSocket = () => {
-  channel = echo.channel(`document.${roomId}`)
+  channel = echo.channel(`document.${roomId}`);
 
   // ドキュメント更新イベント（他のユーザーが保存した場合）
-  channel.listen('.document.updated', (data: { roomId: string; content: string }) => {
-    // 自分のロック中は他のユーザーの更新を無視（競合を避ける）
-    if (!isMyLock.value) {
-      currentTextareaContent.value = data.content
+  channel.listen(
+    ".document.updated",
+    (data: { roomId: string; content: string }) => {
+      // 自分のロック中は他のユーザーの更新を無視（競合を避ける）
+      if (lockState.value !== 'lockedByMe') {
+        currentTextareaContent.value = data.content;
+      }
     }
-  })
+  );
 
   // ロック取得イベント（他のユーザーが編集を開始した場合）
-  channel.listen('.document.locked', (data: { room_id: string; session_id: string; locked_at: string }) => {
-    // 自分がロック取得中、または自分のセッションIDの場合は無視
-    if (isLockingInProgress || data.session_id === mySessionId) return
-    
-    isLocked.value = true
-    isMyLock.value = false
-    textareaRef.value?.setAttribute('disabled', 'true')
-    showErrorMessage('他のユーザーが編集中です')
-    stopAutoUnlockTimer()
-  })
+  channel.listen(
+    ".document.locked",
+    (data: { room_id: string; session_id: string; locked_at: string }) => {
+      // 自分がロック取得中、または自分のセッションIDの場合は無視
+      if (isAcquiringLock || data.session_id === currentSessionId) return;
+
+      lockState.value = 'lockedBySomeone';
+      textareaElementRef.value?.setAttribute("disabled", "true");
+      showErrorMessage("他のユーザーが編集中です");
+      stopAutoUnlockTimer();
+    }
+  );
 
   // ロック解放イベント（他のユーザーが編集を終了した場合）
-  channel.listen('.document.unlocked', (data: { room_id: string; session_id: string }) => {
-    isLocked.value = false
-    isMyLock.value = false
-    textareaRef.value?.removeAttribute('disabled')
-  })
-}
+  channel.listen(
+    ".document.unlocked",
+    (data: { room_id: string; session_id: string }) => {
+      lockState.value = 'unlocked';
+      textareaElementRef.value?.removeAttribute("disabled");
+    }
+  );
+};
 
 // ============================================
 // ページ読み込み時とページ離脱時
@@ -559,36 +581,36 @@ const setupWebSocket = () => {
 onMounted(async () => {
   // 初期データを取得
   try {
-    const doc = await getDocument(roomId)
-    currentTextareaContent.value = doc.content || ''
-    snapshottedTextareaContent = currentTextareaContent.value // 初期状態を保存
+    const doc = await getDocument(roomId);
+    currentTextareaContent.value = doc.content || "";
+    snapshottedTextareaContent = currentTextareaContent.value; // 初期状態を保存
   } catch (error) {
-    console.error('Failed to load document:', error)
+    console.error("Failed to load document:", error);
   }
 
   // WebSocketチャンネルに接続（ロック状態はWebSocketで受信）
-  setupWebSocket()
-  
+  setupWebSocket();
+
   // ページ離脱時の処理（ロックを解放）
-  window.addEventListener('beforeunload', handleBeforeUnload)
-})
+  window.addEventListener("beforeunload", handleBeforeUnload);
+});
 
 onUnmounted(() => {
   // ロックを解放
-  handleReleaseLock()
+  handleUnlock();
 
   // タイマーをクリア
-  if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  if (autoUnlockTimer) clearTimeout(autoUnlockTimer)
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  if (autoUnlockTimer) clearTimeout(autoUnlockTimer);
 
   // イベントリスナーを削除
-  window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 
   // WebSocketチャンネルから切断
   if (channel) {
-    echo.leave(`document.${roomId}`)
+    echo.leave(`document.${roomId}`);
   }
-})
+});
 </script>
 
 <style scoped>
@@ -644,7 +666,7 @@ textarea {
   flex: 1;
   flex-shrink: 0;
   min-width: 0;
-  font-family: 'Noto Sans JP', monospace;
+  font-family: "Noto Sans JP", monospace;
   font-size: 0.875rem;
 }
 
@@ -769,7 +791,7 @@ textarea {
 }
 
 .content-preview :deep(blockquote) {
-  border-left: 3px solid #41B883;
+  border-left: 3px solid #41b883;
   margin: 0.5rem 0;
   padding-left: 1rem;
   color: #666;
@@ -807,7 +829,7 @@ button {
 }
 
 button[type="button"] {
-  background-color: #41B883;
+  background-color: #41b883;
   color: white;
 }
 
@@ -843,12 +865,12 @@ button:disabled {
 }
 
 .drop-zone:hover {
-  border-color: #41B883;
+  border-color: #41b883;
   background: #f0f9f5;
 }
 
 .drop-zone.drag-over {
-  border-color: #41B883;
+  border-color: #41b883;
   background: #e8f5e9;
   border-style: solid;
 }
@@ -879,14 +901,18 @@ button:disabled {
   width: 24px;
   height: 24px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #41B883;
+  border-top: 3px solid #41b883;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .lock-notice {
@@ -970,8 +996,8 @@ textarea:disabled {
 
 .copy-url-btn:hover {
   background-color: #f5f5f5;
-  border-color: #41B883;
-  color: #41B883;
+  border-color: #41b883;
+  color: #41b883;
 }
 
 .copy-url-btn i {
@@ -983,11 +1009,9 @@ textarea:disabled {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  color: #41B883;
+  color: #41b883;
   font-size: 0.875rem;
   white-space: nowrap;
   pointer-events: none;
 }
 </style>
-
-

@@ -79,7 +79,6 @@ export const updateDocument = async (roomId: string, content: string): Promise<S
 // 画像管理
 // ============================================================
 
-/** 画像アップロード（最大5MB、JPEG/PNG/GIF/WebP対応） */
 export const uploadImage = async (roomId: string, file: File): Promise<{ url: string; path: string }> => {
   const MAX_SIZE = 5 * 1024 * 1024;
   const VALID_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -126,6 +125,19 @@ export const deleteImage = async (roomId: string, filename: string): Promise<voi
 // ============================================================
 // 編集ロック管理
 // ============================================================
+export const checkLockStatus = async (roomId: string): Promise<LockStatus> => {
+  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'ロック状態の確認に失敗しました');
+  }
+
+  const data = await response.json();
+  return data as LockStatus;
+};
 
 export const acquireLock = async (roomId: string): Promise<LockResponse> => {
   const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
@@ -146,7 +158,6 @@ export const acquireLock = async (roomId: string): Promise<LockResponse> => {
   return data;
 };
 
-/** ロック解放（編集権限を解放） */
 export const releaseLock = async (roomId: string): Promise<LockResponse> => {
   const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
     method: 'DELETE',
@@ -164,19 +175,4 @@ export const releaseLock = async (roomId: string): Promise<LockResponse> => {
   }
 
   return data;
-};
-
-/** ロック状態確認 */
-export const checkLockStatus = async (roomId: string): Promise<LockStatus> => {
-  const response = await fetch(`${API_BASE}/documents/${roomId}/lock`, {
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'ロック状態の確認に失敗しました');
-  }
-
-  const data = await response.json();
-  return data as LockStatus;
 };
